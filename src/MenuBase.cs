@@ -16,16 +16,25 @@ public class MenuBase
     public MenuValue[] Cursor = new MenuValue[Enum.GetValues(typeof(MenuCursor)).Length];
     public MenuValue[] Selector = new MenuValue[Enum.GetValues(typeof(MenuCursor)).Length];
 
+    public MenuBase(BasePlugin plugin, MenuValue title, MenuValue[] cursor, MenuValue[] selector)
+    {
+        Plugin = plugin;
+        Title = title;
+
+        Cursor = cursor;
+        Selector = selector;
+    }
+
     public MenuBase(BasePlugin plugin, MenuValue title)
     {
         Plugin = plugin;
         Title = title;
 
-        Cursor[(int)MenuCursor.Left] = new MenuValue("►");
-        Cursor[(int)MenuCursor.Right] = new MenuValue("◄");
+        Cursor[(int)MenuCursor.Left] = new MenuValue("►") { Prefix = "<font color=\"#FFFFFF\">" };
+        Cursor[(int)MenuCursor.Right] = new MenuValue("◄") { Prefix = "<font color=\"#FFFFFF\">" };
 
-        Selector[(int)MenuCursor.Left] = new MenuValue("[ ");
-        Selector[(int)MenuCursor.Right] = new MenuValue(" ]");
+        Selector[(int)MenuCursor.Left] = new MenuValue("[ ") { Prefix = "<font color=\"#FFFFFF\">" };
+        Selector[(int)MenuCursor.Right] = new MenuValue(" ]") { Prefix = "<font color=\"#FFFFFF\">" };
     }
 
     public void AddItem(MenuItem item)
