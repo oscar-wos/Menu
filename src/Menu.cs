@@ -102,7 +102,7 @@ public class Menu
                                 selectedItem.Data[0] += 1;
                                 break;
                         }
-
+                        
                         break;
 
                     case MenuButtons.Duck:
@@ -125,10 +125,14 @@ public class Menu
         var html = "";
         var menus = Menus[controller];
 
-        /*
         if (menus.Count > 1)
-            html = menus.Aggregate(html, (current, stackMenu) => current + $"{stackMenu.Title} - ");
-        */
+        {
+            for (var i = 0; i < menus.Count - 2; i++)
+            {
+                var stackMenu = menus.ElementAt(i);
+                html += $"{stackMenu.Title} - ";
+            }
+        }
 
         html += menu.Title;
 
@@ -174,36 +178,47 @@ public class Menu
             if (next > menuItem.Values!.Count - 1)
                 next = 0;
 
-            html += $"{menuItem.Values![prev]} ";
-            html += $"{menu.Selector[(int)MenuCursor.Left]}{menuItem.Values![menuItem.Option]}{menu.Selector[(int)MenuCursor.Right]}";
-            html += $" {menuItem.Values![next]}";
-
-            Console.WriteLine(html);
+            html += $"{FormatString(menu, menuItem, prev)} ";
+            html += $"{menu.Selector[(int)MenuCursor.Left]}{FormatString(menu, menuItem, menuItem.Option)}{menu.Selector[(int)MenuCursor.Right]}";
+            html += $" {FormatString(menu, menuItem, next)}";
 
             return html;
         }
 
         if (menuItem.Option == 0)
         {
-            html += $"{menu.Selector[(int)MenuCursor.Left]}{menuItem.Values![0]}{menu.Selector[(int)MenuCursor.Right]}";
+            html += $"{menu.Selector[(int)MenuCursor.Left]}{FormatString(menu, menuItem, 0)}{menu.Selector[(int)MenuCursor.Right]}";
 
-            for (var i = 0; i < 2 && i < menuItem.Values.Count - 1; i++)
-                html += $" {menuItem.Values![i + 1]}";
+            for (var i = 0; i < 2 && i < menuItem.Values!.Count - 1; i++)
+                html += $" {FormatString(menu, menuItem, i + 1)}";
         }
         else if (menuItem.Option == menuItem.Values!.Count - 1)
         {
             for (var i = 2; i > 0; i--)
             {
-                if (menuItem.Option - i > 0)
-                    html += $"{menuItem.Values![menuItem.Option - i]} ";
+                if (menuItem.Option - i >= 0)
+                    html += $"{FormatString(menu, menuItem, menuItem.Option - i)} ";
             }
 
-            html += $"{menu.Selector[(int)MenuCursor.Left]}{menuItem.Values![menuItem.Option]}{menu.Selector[(int)MenuCursor.Right]}";
+            html += $"{menu.Selector[(int)MenuCursor.Left]}{FormatString(menu, menuItem, menuItem.Option)}{menu.Selector[(int)MenuCursor.Right]}";
         }
         else
-            html += $"{menuItem.Values![menuItem.Option - 1]} {menu.Selector[(int)MenuCursor.Left]}{menuItem.Values![menuItem.Option]}{menu.Selector[(int)MenuCursor.Right]} {menuItem.Values![menuItem.Option + 1]}";
+            html += $"{FormatString(menu, menuItem, menuItem.Option - 1)} {menu.Selector[(int)MenuCursor.Left]}{FormatString(menu, menuItem, menuItem.Option)}{menu.Selector[(int)MenuCursor.Right]} {FormatString(menu, menuItem, menuItem.Option + 1)}";
 
         return html;
+    }
+
+    private static string FormatString(MenuBase menu, MenuItem menuItem, int index)
+    {
+        var menuValue = menuItem.Values![index];
+
+        if (menuItem.Type != MenuItemType.ChoiceBool)
+            return menuValue.ToString();
+
+        menuValue.Prefix = menuItem.Data[index] == 0 ? menu.Bool[(int)MenuBool.False].Prefix : menu.Bool[(int)MenuBool.True].Prefix;
+        menuValue.Suffix = menuItem.Data[index] == 0 ? menu.Bool[(int)MenuBool.False].Suffix : menu.Bool[(int)MenuBool.True].Suffix;
+
+        return menuValue.ToString();
     }
 
     public void SetMenu(CCSPlayerController controller, MenuBase menu)

@@ -9,9 +9,9 @@ public class MenuItem
     public MenuValue? Head { get; set; }
     public MenuValue? Tail { get; set; }
     public List<MenuValue>? Values { get; set; }
+    public int Option { get; set; } = 0;
     public int[] Data { get; set; }
     public string DataString { get; set; } = "";
-    public int Option { get; set; } = 0;
 
     public MenuItem(MenuItemType type, MenuValue head, List<MenuValue> values, MenuValue tail, bool pinwheel = false)
     {
