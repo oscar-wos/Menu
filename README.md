@@ -9,6 +9,9 @@ First we need to import .dll into the .csproj
 </ItemGroup>
 ```
 
+> [!WARNING]
+> Make sure to delete `Menu.dll` from `yourPlugin.dll` since the library is in `/shared/Menu/Menu.dll` available from Releases
+
 Next we have to create a new Menu object
 ```cs
 using Menu;
