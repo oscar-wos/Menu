@@ -3,9 +3,9 @@ using CounterStrikeSharp.API.Core;
 using Menu;
 using Menu.Enums;
 
-namespace pl1;
+namespace example;
 
-public class pl1 : BasePlugin
+public class Example : BasePlugin
 {
     public override string ModuleName => "pl1";
     public override string ModuleVersion => "1.0.0";
@@ -51,8 +51,9 @@ public class pl1 : BasePlugin
                 new("choice5")
             };
 
-            var players = Utilities.GetPlayers().Select(player => new MenuValue(player.PlayerName)).ToList();
-            players.Add(new MenuValue("player1"));
+            var players = Utilities.GetPlayers().Select(player => (MenuValue)new PlayerValue(player.PlayerName, player.UserId)).ToList();
+            players.Add(new PlayerValue("p1", 1));
+            players.Add(new PlayerValue("p2", 2));
 
             var item = new MenuItem(MenuItemType.ChoiceBool, options);
             var itemPinwheel = new MenuItem(MenuItemType.Choice, new MenuValue("h: "), choices, new MenuValue(" :t"), true);
@@ -67,4 +68,11 @@ public class pl1 : BasePlugin
             Menu.SetMenu(controller!, mainMenu);
         });
     }
+}
+
+public class PlayerValue(string value, int? id) : MenuValue(value)
+{
+    public int? Id { get; set; } = id;
+    //public Player? Player { get; set; }
+    //public CCSPlayerController? Controller { get; set; }
 }
