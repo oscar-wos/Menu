@@ -27,7 +27,7 @@ public class Example : BasePlugin
                 new(" ]") { Prefix = "<font color=\"#0033FF\">", Suffix = "<font color=\"#FFFFFF\">" },
             };
 
-            var mainMenu = new MenuBase(this, new MenuValue("Main Menu"))
+            var mainMenu = new MenuBase(new MenuValue("Main Menu"))
             {
                 Cursor = cursor,
                 Selector = selector
@@ -52,7 +52,7 @@ public class Example : BasePlugin
             };
 
             var players = Utilities.GetPlayers().Select(player => (MenuValue)new PlayerValue(player.PlayerName, player.UserId)).ToList();
-            players.Add(new PlayerValue("p1", 1));
+            players.Add(new PlayerValue("p1", 1) { Prefix = "<font color=\"#AA1133\">", Suffix = "<font color=\"#FFFFFF\">" });
             players.Add(new PlayerValue("p2", 2));
 
             var item = new MenuItem(MenuItemType.ChoiceBool, options);
@@ -65,7 +65,10 @@ public class Example : BasePlugin
             mainMenu.AddItem(itemPlayers);
             mainMenu.AddItem(itemPlayersPinwheel);
             
-            Menu.SetMenu(controller!, mainMenu);
+            Menu.AddMenu(controller!, mainMenu, (callback =>
+            {
+                Console.WriteLine(callback);
+            }));
         });
     }
 }

@@ -26,15 +26,16 @@ public class Menu
                 .Where(menuItem => menuItem.Type is not (MenuItemType.Spacer or MenuItemType.Text)).ToList();
             var selectedItem = selectItems[menu.Option];
 
+
             if (menu.AcceptButtons)
             {
                 switch (buttons)
                 {
-                    case MenuButtons.Jump:
+                    case MenuButtons.Select:
                         switch (selectedItem.Type)
                         {
                             case MenuItemType.Button:
-                                //
+                                menu.Callback?.Invoke(MenuButtons.Select);
                                 break;
 
                             case MenuItemType.Bool:
@@ -53,11 +54,11 @@ public class Menu
                         
                         break;
 
-                    case MenuButtons.Forward when !menu.AcceptInput:
+                    case MenuButtons.Up when !menu.AcceptInput:
                         menu.Option = menu.Option == 0 ? 0 : menu.Option - 1;
                         break;
 
-                    case MenuButtons.Back when !menu.AcceptInput:
+                    case MenuButtons.Down when !menu.AcceptInput:
                         menu.Option = menu.Option == selectItems.Count - 1 ? selectItems.Count - 1 : menu.Option + 1;
                         break;
 
@@ -105,11 +106,13 @@ public class Menu
                         
                         break;
 
-                    case MenuButtons.Duck:
-                        menus.Pop();
+                    case MenuButtons.Back:
+                        if (menus.Count > 1)
+                            menus.Pop();
+
                         continue;
 
-                    case MenuButtons.Scoreboard:
+                    case MenuButtons.Exit:
                         Menus.Remove(controller);
                         continue;
                 }
@@ -127,7 +130,7 @@ public class Menu
 
         if (menus.Count > 1)
         {
-            for (var i = 0; i < menus.Count - 2; i++)
+            for (var i = 0; i < menus.Count - 1; i++)
             {
                 var stackMenu = menus.ElementAt(i);
                 html += $"{stackMenu.Title} - ";
@@ -229,20 +232,22 @@ public class Menu
         return menu.Selector[(int)selector].ToString();
     }
 
-    public void SetMenu(CCSPlayerController controller, MenuBase menu)
+    public void SetMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons> callback)
     {
         if (!Menus.ContainsKey(controller))
             Menus.Add(controller, new Stack<MenuBase>());
 
+        menu.Callback = callback;
         Menus[controller].Clear();
         Menus[controller].Push(menu);
     }
 
-    public void AddMenu(CCSPlayerController controller, MenuBase menu)
+    public void AddMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons> callback)
     {
         if (!Menus.ContainsKey(controller))
             Menus.Add(controller, new Stack<MenuBase>());
 
+        menu.Callback = callback;
         Menus[controller].Push(menu);
     }
 }

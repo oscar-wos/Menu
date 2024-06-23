@@ -1,11 +1,10 @@
-﻿using CounterStrikeSharp.API.Core;
-using Menu.Enums;
+﻿using Menu.Enums;
 
 namespace Menu;
 
-public class MenuBase(BasePlugin plugin, MenuValue title)
+public class MenuBase(MenuValue title)
 {
-    public BasePlugin Plugin { get; init; } = plugin;
+    public Action<MenuButtons>? Callback;
     public MenuValue Title { get; set; } = title;
     public List<MenuItem> Items { get; set; } = [];
     public int Option { get; set; } = 0;
