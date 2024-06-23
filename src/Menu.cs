@@ -9,6 +9,23 @@ public class Menu
 {
     private static readonly Dictionary<CCSPlayerController, Stack<MenuBase>> Menus = [];
     private static readonly Timer Timer = new(0.1f, TimerRepeat, TimerFlags.REPEAT);
+    private static readonly SayEvent OnSay = new("say", OnSayEvent);
+    private static readonly SayEvent OnSayTeam = new("say_team", OnSayEvent);
+
+    private static void OnSayEvent(CCSPlayerController? controller, string message)
+    {
+        if (controller == null || !controller.IsValid || !Menus.TryGetValue(controller, out var value))
+            return;
+
+        var menu = value.Peek();
+
+        if (!menu.AcceptInput)
+            return;
+
+        var selectedItem = menu.Items[menu.Option];
+        selectedItem.DataString = message;
+        menu.AcceptInput = false;
+    }
 
     private static void TimerRepeat()
     {
@@ -19,7 +36,7 @@ public class Menu
                 Menus.Remove(controller);
                 continue;
             }
-
+            
             var menu = menus.Peek();
             var buttons = (MenuButtons)controller.Buttons;
             var selectItems = menu.Items
@@ -67,9 +84,15 @@ public class Menu
                                     selectedItem.Option = selectedItem.Option == 0 ? 0 : selectedItem.Option - 1;
                                 break;
 
+                            case MenuItemType.Slider:
+                                selectedItem.Data[0] = selectedItem.Data[0] == 0 ? 0 : selectedItem.Data[0] - 1;
+                                break;
+
+                            /*
                             case (MenuItemType.Slider or MenuItemType.Percentage or MenuItemType.Value):
                                 selectedItem.Data[0] = selectedItem.Data[0] == 0 ? 0 : selectedItem.Data[0] - 1;
                                 break;
+                            */
                         }
 
                         break;
@@ -90,6 +113,7 @@ public class Menu
                                 selectedItem.Data[0] = selectedItem.Data[0] == 10 ? 10 : selectedItem.Data[0] + 1;
                                 break;
 
+                            /*
                             case MenuItemType.Percentage:
                                 selectedItem.Data[0] = selectedItem.Data[0] == 100 ? 100 : selectedItem.Data[0] + 1;
                                 break;
@@ -97,14 +121,20 @@ public class Menu
                             case MenuItemType.Value:
                                 selectedItem.Data[0] += 1;
                                 break;
+                            */
                         }
                         
                         break;
 
                     case MenuButtons.Back:
+                        if (menu.AcceptInput)
+                        {
+                            menu.AcceptInput = false;
+                            break;
+                        }
+
                         if (menus.Count > 1)
                             menus.Pop();
-
                         continue;
 
                     case MenuButtons.Exit:
@@ -157,6 +187,18 @@ public class Menu
             {
                 case MenuItemType.Choice or MenuItemType.ChoiceBool or MenuItemType.Button:
                     html += FormatValues(menu, menuItem, selectedItem);
+                    break;
+
+                case MenuItemType.Slider:
+                    html += FormatSlider(menu, menuItem);
+                    break;
+
+                case MenuItemType.Input:
+                    html += FormatInput(menu, menuItem);
+                    break;
+
+                case MenuItemType.Bool:
+                    html += FormatBool(menu, menuItem);
                     break;
             }
 
@@ -234,6 +276,43 @@ public class Menu
             return "";
 
         return menu.Selector[(int)selector].ToString();
+    }
+
+    private static string FormatSlider(MenuBase menu, MenuItem menuItem)
+    {
+        var html = "";
+
+        html += menu.Slider[(int)MenuSlider.Left].ToString();
+
+        for (var i = 0; i < 11; i++)
+            html += $"{(i == menuItem.Data[0] ? menu.Slider[(int)MenuSlider.Selected] : menu.Slider[(int)MenuSlider.Spacer])}{(i != 10 ? " " : "")}";
+
+        html += menu.Slider[(int)MenuSlider.Right].ToString();
+
+        return html;
+    }
+
+    private static string FormatInput(MenuBase menu, MenuItem menuItem)
+    {
+        var html = "";
+
+        if (menu.AcceptInput)
+            html += menu.Selector[(int)MenuCursor.Left].ToString();
+
+        if (menuItem.DataString.Length == 0)
+            html += menu.Input[(int)MenuInput.Empty].ToString();
+        else
+            html += menuItem.DataString;
+
+        if (menu.AcceptInput)
+            html += menu.Selector[(int)MenuCursor.Right].ToString();
+
+        return html;
+    }
+
+    private static string FormatBool(MenuBase menu, MenuItem menuItem)
+    {
+        return menuItem.Data[0] == 0 ? menu.Bool[(int)MenuBool.False].ToString() : menu.Bool[(int)MenuBool.True].ToString();
     }
 
     public void SetMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons, MenuBase, MenuItem> callback)

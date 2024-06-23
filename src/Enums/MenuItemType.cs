@@ -9,7 +9,5 @@ public enum MenuItemType
     Button,
     Spacer,
     Slider,
-    Percentage,
-    Value,
     Input
 }

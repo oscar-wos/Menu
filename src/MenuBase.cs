@@ -30,6 +30,19 @@ public class MenuBase(MenuValue title)
         new MenuValue("✔") { Prefix = "<font color=\"#008000\">", Suffix = "<font color=\"#FFFFFF\">" }
     ];
 
+    public MenuValue[] Slider =
+    [
+        new MenuValue("(") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
+        new MenuValue(")") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
+        new MenuValue("-") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
+        new MenuValue("|") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
+    ];
+
+    public MenuValue[] Input =
+    [
+        new MenuValue("________") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
+    ];
+
     public void AddItem(MenuItem item)
     {
         Items.Add(item);
