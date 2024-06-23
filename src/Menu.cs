@@ -26,7 +26,6 @@ public class Menu
                 .Where(menuItem => menuItem.Type is not (MenuItemType.Spacer or MenuItemType.Text)).ToList();
             var selectedItem = selectItems[menu.Option];
 
-
             if (menu.AcceptButtons)
             {
                 switch (buttons)
@@ -34,10 +33,6 @@ public class Menu
                     case MenuButtons.Select:
                         switch (selectedItem.Type)
                         {
-                            case MenuItemType.Button:
-                                menu.Callback?.Invoke(MenuButtons.Select);
-                                break;
-
                             case MenuItemType.Bool:
                                 selectedItem.Data[0] = selectedItem.Data[0] == 0 ? 1 : 0;
                                 break;
@@ -116,6 +111,9 @@ public class Menu
                         Menus.Remove(controller);
                         continue;
                 }
+
+                if (buttons != 0)
+                    menu.Callback?.Invoke(buttons, menu, selectedItem);
             }
 
             menu.AcceptButtons = buttons == 0;
@@ -130,18 +128,24 @@ public class Menu
 
         if (menus.Count > 1)
         {
-            for (var i = 0; i < menus.Count - 1; i++)
+            for (var i = menus.Count - 1; i >= 0; i--)
             {
                 var stackMenu = menus.ElementAt(i);
-                html += $"{stackMenu.Title} - ";
+
+                if (i == menus.Count - 1)
+                    html += $"{stackMenu.Title.Prefix}{stackMenu.Title.Value} - ";
+                else if (i == 0)
+                    html += $"{stackMenu.Title.Value}{stackMenu.Title.Suffix}";
+                else
+                    html += $"{stackMenu.Title.Value} - ";
             }
         }
-
-        html += menu.Title;
+        else 
+            html += menu.Title;
 
         foreach (var menuItem in menu.Items)
         {
-            html += "<br>";
+            html += $"<br>\u00A0{menu.Title.Suffix}";
 
             if (menuItem == selectedItem)
                 html += menu.Cursor[(int)MenuCursor.Left];
@@ -232,7 +236,7 @@ public class Menu
         return menu.Selector[(int)selector].ToString();
     }
 
-    public void SetMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons> callback)
+    public void SetMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons, MenuBase, MenuItem> callback)
     {
         if (!Menus.ContainsKey(controller))
             Menus.Add(controller, new Stack<MenuBase>());
@@ -242,7 +246,7 @@ public class Menu
         Menus[controller].Push(menu);
     }
 
-    public void AddMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons> callback)
+    public void AddMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons, MenuBase, MenuItem> callback)
     {
         if (!Menus.ContainsKey(controller))
             Menus.Add(controller, new Stack<MenuBase>());

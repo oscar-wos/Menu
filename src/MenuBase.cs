@@ -4,7 +4,7 @@ namespace Menu;
 
 public class MenuBase(MenuValue title)
 {
-    public Action<MenuButtons>? Callback;
+    public Action<MenuButtons, MenuBase, MenuItem>? Callback;
     public MenuValue Title { get; set; } = title;
     public List<MenuItem> Items { get; set; } = [];
     public int Option { get; set; } = 0;

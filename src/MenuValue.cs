@@ -1,6 +1,4 @@
-﻿using Menu.Enums;
-
-namespace Menu;
+﻿namespace Menu;
 
 public class MenuValue(string value) : IMenuFormat
 {
