@@ -42,22 +42,22 @@ public class pl1 : BasePlugin
                 new("option5")
             };
 
-            var buttons = new List<MenuValue>
+            var choices = new List<MenuValue>
             {
-                new("button1") { Prefix = "<font color=\"#AA1133\">", Suffix = "<font color=\"#FFFFFF\">" },
-                new("button2"),
-                new("button3"),
-                new("button4") { Prefix = "<font color=\"#BB9933\">", Suffix = "<font color=\"#FFFFFF\">" },
-                new("button5")
+                new("choice1") { Prefix = "<font color=\"#AA1133\">", Suffix = "<font color=\"#FFFFFF\">" },
+                new("choice2"),
+                new("choice3"),
+                new("choice4") { Prefix = "<font color=\"#BB9933\">", Suffix = "<font color=\"#FFFFFF\">" },
+                new("choice5")
             };
 
             var players = Utilities.GetPlayers().Select(player => new MenuValue(player.PlayerName)).ToList();
-            players.Add(new MenuValue("FakePlayer"));
+            players.Add(new MenuValue("player1"));
 
             var item = new MenuItem(MenuItemType.ChoiceBool, options);
-            var itemPinwheel = new MenuItem(MenuItemType.Button, new MenuValue("h: "), buttons, new MenuValue(" :t"), true);
-            var itemPlayers = new MenuItem(MenuItemType.Choice, new MenuValue("head: ") { Prefix = "<font color=\"#AA33CC\">", Suffix = "<font color=\"#FFFFFF\">" }, players, new MenuValue(" :tail") { Prefix = "<font color=\"#DDAA11\">", Suffix = "<font color=\"#FFFFFF\">" });
-            var itemPlayersPinwheel = new MenuItem(MenuItemType.Choice, players, true);
+            var itemPinwheel = new MenuItem(MenuItemType.Choice, new MenuValue("h: "), choices, new MenuValue(" :t"), true);
+            var itemPlayers = new MenuItem(MenuItemType.Button, new MenuValue("button: ") { Prefix = "<font color=\"#AA33CC\">", Suffix = "<font color=\"#FFFFFF\">" }, players, new MenuValue(" :tail") { Prefix = "<font color=\"#DDAA11\">", Suffix = "<font color=\"#FFFFFF\">" });
+            var itemPlayersPinwheel = new MenuItem(MenuItemType.Button, new MenuValue("button: "), players, true);
 
             mainMenu.AddItem(item);
             mainMenu.AddItem(itemPinwheel);

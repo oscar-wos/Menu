@@ -7,10 +7,10 @@ namespace Menu;
 
 public class Menu
 {
-    public static Dictionary<CCSPlayerController, Stack<MenuBase>> Menus = [];
+    private static readonly Dictionary<CCSPlayerController, Stack<MenuBase>> Menus = [];
     private static readonly Timer Timer = new(0.1f, TimerRepeat, TimerFlags.REPEAT);
 
-    public static void TimerRepeat()
+    private static void TimerRepeat()
     {
         foreach (var (controller, menus) in Menus)
         {
@@ -149,7 +149,7 @@ public class Menu
             switch (menuItem.Type)
             {
                 case MenuItemType.Choice or MenuItemType.ChoiceBool or MenuItemType.Button:
-                    html += FormatValues(menu, menuItem);
+                    html += FormatValues(menu, menuItem, selectedItem);
                     break;
             }
 
@@ -163,7 +163,7 @@ public class Menu
         controller.PrintToCenterHtml(html);
     }
 
-    private static string FormatValues(MenuBase menu, MenuItem menuItem)
+    private static string FormatValues(MenuBase menu, MenuItem menuItem, MenuItem selectedItem)
     {
         var html = "";
 
@@ -179,7 +179,7 @@ public class Menu
                 next = 0;
 
             html += $"{FormatString(menu, menuItem, prev)} ";
-            html += $"{menu.Selector[(int)MenuCursor.Left]}{FormatString(menu, menuItem, menuItem.Option)}{menu.Selector[(int)MenuCursor.Right]}";
+            html += $"{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Left)}{FormatString(menu, menuItem, menuItem.Option)}{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Right)}";
             html += $" {FormatString(menu, menuItem, next)}";
 
             return html;
@@ -187,7 +187,7 @@ public class Menu
 
         if (menuItem.Option == 0)
         {
-            html += $"{menu.Selector[(int)MenuCursor.Left]}{FormatString(menu, menuItem, 0)}{menu.Selector[(int)MenuCursor.Right]}";
+            html += $"{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Left)}{FormatString(menu, menuItem, 0)}{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Right)}";
 
             for (var i = 0; i < 2 && i < menuItem.Values!.Count - 1; i++)
                 html += $" {FormatString(menu, menuItem, i + 1)}";
@@ -200,10 +200,10 @@ public class Menu
                     html += $"{FormatString(menu, menuItem, menuItem.Option - i)} ";
             }
 
-            html += $"{menu.Selector[(int)MenuCursor.Left]}{FormatString(menu, menuItem, menuItem.Option)}{menu.Selector[(int)MenuCursor.Right]}";
+            html += $"{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Left)}{FormatString(menu, menuItem, menuItem.Option)}{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Right)}";
         }
         else
-            html += $"{FormatString(menu, menuItem, menuItem.Option - 1)} {menu.Selector[(int)MenuCursor.Left]}{FormatString(menu, menuItem, menuItem.Option)}{menu.Selector[(int)MenuCursor.Right]} {FormatString(menu, menuItem, menuItem.Option + 1)}";
+            html += $"{FormatString(menu, menuItem, menuItem.Option - 1)} {FormatSelector(menu, menuItem, selectedItem, MenuCursor.Left)}{FormatString(menu, menuItem, menuItem.Option)}{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Right)} {FormatString(menu, menuItem, menuItem.Option + 1)}";
 
         return html;
     }
@@ -219,6 +219,14 @@ public class Menu
         menuValue.Suffix = menuItem.Data[index] == 0 ? menu.Bool[(int)MenuBool.False].Suffix : menu.Bool[(int)MenuBool.True].Suffix;
 
         return menuValue.ToString();
+    }
+
+    private static string FormatSelector(MenuBase menu, MenuItem menuItem, MenuItem selectedItem, MenuCursor selector)
+    {
+        if (menuItem.Type is MenuItemType.Button or MenuItemType.ChoiceBool && menuItem != selectedItem)
+            return "";
+
+        return menu.Selector[(int)selector].ToString();
     }
 
     public void SetMenu(CCSPlayerController controller, MenuBase menu)
