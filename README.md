@@ -1,10 +1,10 @@
 # Menu
 
-First we need to import .dll
+First we need to import .dll into the .csproj
 ```xml
 <ItemGroup>
   <Reference Include="Menu">
-    <HintPath>path\to\MyAssembly.dll</HintPath>
+    <HintPath>path\to\Menu.dll</HintPath>
   </Reference>
 </ItemGroup>
 ```
