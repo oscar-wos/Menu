@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using Menu;
 using Menu.Enums;
 
@@ -10,6 +11,25 @@ public class Example : BasePlugin
     public override string ModuleName => "example";
     public override string ModuleVersion => "1.0.0";
     public Menu.Menu Menu { get; } = new();
+
+    private readonly Dictionary<CCSPlayerController, MenuBase> _dynamicMenu = new();
+
+    public Example()
+    {
+        global::Menu.Menu.OnDrawMenu += (_, menuEvent) =>
+        {
+            var controller = menuEvent.Controller;
+
+            if (!_dynamicMenu.TryGetValue(controller, out var dynamicMenu))
+                return;
+
+            if (menuEvent.Menu != dynamicMenu)
+                return;
+
+            var dynamicValue = (DynamicValue)dynamicMenu.Items[0].Head!;
+            dynamicValue.Position = controller.PlayerPawn.Value!.AbsOrigin!;
+        };
+    }
 
     public override void Load(bool isReload)
     {
@@ -109,7 +129,7 @@ public class Example : BasePlugin
                             break;
 
                         case ButtonType.Select:
-                            CustomSelect(controller);
+                            CustomSelect(controller, new Vector(0, 0, 0));
                             break;
                     }
 
@@ -139,12 +159,45 @@ public class Example : BasePlugin
                 }
             });
         });
+
+        AddCommand("css_test1", "", (controller, _) =>
+        {
+            if (controller == null || !controller.IsValid)
+                return;
+
+            var dynamicMenu = new MenuBase(new MenuValue("Dynamic Menu") { Prefix = "<font class=\"fontSize-L\">", Suffix = "<font class=\"fontSize-sm\">" });
+
+            var dynamicItem = new MenuItem(MenuItemType.Text, new DynamicValue(""));
+            dynamicMenu.AddItem(dynamicItem);
+
+            var saveButton = new MenuItem(MenuItemType.Button, [new MenuValue("Save")]);
+            dynamicMenu.AddItem(saveButton);
+
+            _dynamicMenu[controller] = dynamicMenu;
+
+            Menu.SetMenu(controller, dynamicMenu, (buttons, menu, _) =>
+            {
+                if (buttons != MenuButtons.Select)
+                    return;
+
+                if (menu.Option != 0)
+                    return;
+
+                if (menu.Option == 0)
+                {
+                    var dynamicValue = (DynamicValue)menu.Items[0].Head!;
+                    Console.WriteLine($"{dynamicValue}");
+
+                    CustomSelect(controller, dynamicValue.Position);
+                }
+            });
+        });
     }
 
-    private void CustomSelect(CCSPlayerController controller)
+    private void CustomSelect(CCSPlayerController controller, Vector pos)
     {
         // Since it's a sub menu setting Prefix will not affect the title as it inherits from Menu[0], Suffix will still work
-        var subMenu = new MenuBase(new MenuValue("Sub Menu") { Prefix = "<font class=\"fontSize-XXXL\">", Suffix = "<font class=\"fontSize-s\">" }) ;
+        var subMenu = new MenuBase(new MenuValue("Sub Menu") { Prefix = "<font class=\"fontSize-XXXL\">", Suffix = "<font class=\"fontSize-m\">" }) ;
 
         var options = new List<MenuValue>
         {
@@ -159,6 +212,9 @@ public class Example : BasePlugin
         var itemOptions = new MenuItem(MenuItemType.ChoiceBool, new MenuValue("options: "), options);
         subMenu.AddItem(itemOptions);
         subMenu.AddItem(new MenuItem(MenuItemType.Bool));
+
+        subMenu.AddItem(new MenuItem(MenuItemType.Spacer));
+        subMenu.AddItem(new MenuItem(MenuItemType.Text, new MenuValue($"Saving: {pos.X} {pos.Y} {pos.Z}")));
 
         // Menu.AddMenu() to add to the stack (sub-menu)
         Menu.AddMenu(controller, subMenu, (buttons, menu, item) =>
@@ -175,6 +231,51 @@ public class Example : BasePlugin
             if (menu.Option == 1)
                 Console.WriteLine($"Bool: {item.Data[0]}");
         });
+    }
+
+    private void BuildMenu(CCSPlayerController controller)
+    {
+        // Create a Menu object which holds all data
+        var mainMenu = new MenuBase(new MenuValue("Main Menu") { Prefix = "<font class=\"fontSize-L\">", Suffix = "<font class=\"fontSize-sm\">" });
+
+        // Can add custom formatting, MenuValue[2] Cursor, MenuValue[2] Selector, MenuValue[2] Bool, MenuValue[4] Slider, MenuValue[1] Input
+        var cursor = new MenuValue[2]
+        {
+            // MenuValue is the fundamental building block of everything in the Menu - MenuValue.Value, MenuValue.Prefix, MenuValue.Suffix
+            new("--> ") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
+            new(" <--") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
+        };
+        
+        mainMenu.Cursor = cursor;
+
+        // Let's add a simple text field to the menu, each (row) is a MenuItem which holds data for that (row)
+        // Again MenuValue is the fundamental building block of everything in the Menu - MenuValue.Value, MenuValue.Prefix, MenuValue.Suffix
+
+        var textItem = new MenuValue("Welcome to the new menu!");
+
+        // Let's modify the prefix and suffix of the textItem
+
+        textItem.Prefix = "<font color=\"#FF0000\">";
+        textItem.Suffix = "<font color=\"#FFFFFF\">";
+
+        // Simplified
+
+        textItem = new MenuValue("Welcome to the new menu!")
+        {
+            Prefix = "<font color=\"#FF0000\">",
+            Suffix = "<font color=\"#FFFFFF\">"
+        };
+
+        var simpleTextItem = new MenuItem(MenuItemType.Text, textItem);
+
+        // Now let's add the textItem to the menu
+        mainMenu.AddItem(simpleTextItem);
+
+        // And let's add to the global stack to print to the player
+        Menu.SetMenu(controller, mainMenu, (buttons, menu, item) => { });
+
+        // The library automatically handles the deposition of the menu
+        // Using Tab (Scoreboard) exists the menu, and Ctrl (Duck) will go back to the previous menu
     }
 }
 
@@ -195,4 +296,14 @@ public enum ButtonType
     Search,
     Find,
     Select
+}
+
+public class DynamicValue(string value) : MenuValue(value)
+{
+    public Vector Position { get; set; } = new(0, 0, 0);
+
+    public override string ToString()
+    {
+        return $"{Prefix}x: {Position.X} y: {Position.Y} z: {Position.Z}{Suffix}";
+    }
 }

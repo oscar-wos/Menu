@@ -11,6 +11,7 @@ public class Menu
     private static readonly Timer Timer = new(0.1f, TimerRepeat, TimerFlags.REPEAT);
     private static readonly SayEvent OnSay = new("say", OnSayEvent);
     private static readonly SayEvent OnSayTeam = new("say_team", OnSayEvent);
+    public static event EventHandler<MenuEvent>? OnDrawMenu;
 
     private static void OnSayEvent(CCSPlayerController? controller, string message)
     {
@@ -25,6 +26,11 @@ public class Menu
         var selectedItem = menu.Items[menu.Option];
         selectedItem.DataString = message;
         menu.AcceptInput = false;
+    }
+
+    protected static void RaiseDrawMenu(CCSPlayerController controller, MenuBase menu, MenuItem? selectedItem)
+    {
+        OnDrawMenu?.Invoke(null, new MenuEvent(controller, menu, selectedItem));
     }
 
     private static void TimerRepeat()
@@ -148,6 +154,7 @@ public class Menu
 
             menu.AcceptButtons = buttons == 0;
             DrawMenu(controller, menu, selectedItem);
+            RaiseDrawMenu(controller, menu, selectedItem);
         }
     }
 
@@ -259,7 +266,10 @@ public class Menu
 
     private static string FormatString(MenuBase menu, MenuItem menuItem, int index)
     {
-        var menuValue = menuItem.Values![index];
+        if (menuItem.Values == null)
+            return "";
+
+        var menuValue = menuItem.Values[index];
 
         if (menuItem.Type != MenuItemType.ChoiceBool)
             return menuValue.ToString();
@@ -332,5 +342,29 @@ public class Menu
 
         menu.Callback = callback;
         Menus[controller].Push(menu);
+    }
+
+    public void ClearMenus(CCSPlayerController controller)
+    {
+        Menus.Remove(controller);
+    }
+
+    public void PopMenu(CCSPlayerController controller, MenuBase? menu = null)
+    {
+        if (!Menus.TryGetValue(controller, out var value))
+            return;
+
+        if (menu != null && value.Peek() != menu)
+            return;
+
+        value.Pop();
+    }
+
+    public bool IsCurrentMenu(CCSPlayerController controller, MenuBase menu)
+    {
+        if (!Menus.TryGetValue(controller, out var value))
+            return false;
+
+        return value.Peek() == menu;
     }
 }
