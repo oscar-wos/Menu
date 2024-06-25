@@ -4,7 +4,7 @@ namespace Menu;
 
 public class MenuBase(MenuValue title)
 {
-    public Action<MenuButtons, MenuBase, MenuItem>? Callback;
+    public Action<MenuButtons, MenuBase, MenuItem?>? Callback;
     public MenuValue Title { get; set; } = title;
     public List<MenuItem> Items { get; set; } = [];
     public int Option { get; set; } = 0;
@@ -38,10 +38,8 @@ public class MenuBase(MenuValue title)
         new MenuValue("|") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
     ];
 
-    public MenuValue[] Input =
-    [
-        new MenuValue("________") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
+    public MenuValue Input = new("________") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" };
+    public MenuValue Separator = new(" - ") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" };
 
     public void AddItem(MenuItem item)
     {

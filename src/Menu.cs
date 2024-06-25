@@ -45,15 +45,17 @@ public class Menu
             
             var menu = menus.Peek();
             var buttons = (MenuButtons)controller.Buttons;
-            var selectItems = menu.Items
-                .Where(menuItem => menuItem.Type is not (MenuItemType.Spacer or MenuItemType.Text)).ToList();
-            var selectedItem = selectItems[menu.Option];
+            var selectItems = menu.Items.Where(menuItem => menuItem.Type is not (MenuItemType.Spacer or MenuItemType.Text)).ToList();
+            var selectedItem = selectItems.Count > 0 ? selectItems[menu.Option] : null;
 
             if (menu.AcceptButtons)
             {
                 switch (buttons)
                 {
                     case MenuButtons.Select:
+                        if (selectedItem == null)
+                            break;
+
                         switch (selectedItem.Type)
                         {
                             case MenuItemType.Bool:
@@ -61,8 +63,7 @@ public class Menu
                                 break;
 
                             case MenuItemType.ChoiceBool:
-                                selectedItem.Data[selectedItem.Option] =
-                                    selectedItem.Data[selectedItem.Option] == 0 ? 1 : 0;
+                                selectedItem.Data[selectedItem.Option] = selectedItem.Data[selectedItem.Option] == 0 ? 1 : 0;
                                 break;
 
                             case MenuItemType.Input:
@@ -81,6 +82,9 @@ public class Menu
                         break;
 
                     case MenuButtons.Left when !menu.AcceptInput:
+                        if (selectedItem == null)
+                            break;
+
                         switch (selectedItem.Type)
                         {
                             case (MenuItemType.Choice or MenuItemType.ChoiceBool or MenuItemType.Button):
@@ -94,56 +98,45 @@ public class Menu
                                 selectedItem.Data[0] = selectedItem.Data[0] == 0 ? 0 : selectedItem.Data[0] - 1;
                                 break;
 
-                            /*
-                            case (MenuItemType.Slider or MenuItemType.Percentage or MenuItemType.Value):
-                                selectedItem.Data[0] = selectedItem.Data[0] == 0 ? 0 : selectedItem.Data[0] - 1;
-                                break;
-                            */
                         }
 
                         break;
 
                     case MenuButtons.Right when !menu.AcceptInput:
+                        if (selectedItem == null)
+                            break;
+
                         switch (selectedItem.Type)
                         {
                             case (MenuItemType.Choice or MenuItemType.ChoiceBool or MenuItemType.Button):
                                 if (selectedItem.Pinwheel)
                                     selectedItem.Option = selectedItem.Option == selectedItem.Values!.Count - 1 ? 0 : selectedItem.Option + 1;
                                 else
-                                    selectedItem.Option = selectedItem.Option == selectedItem.Values!.Count - 1
-                                        ? selectedItem.Values.Count - 1
-                                        : selectedItem.Option + 1;
+                                    selectedItem.Option = selectedItem.Option == selectedItem.Values!.Count - 1 ? selectedItem.Values.Count - 1 : selectedItem.Option + 1;
                                 break;
 
                             case MenuItemType.Slider:
                                 selectedItem.Data[0] = selectedItem.Data[0] == 10 ? 10 : selectedItem.Data[0] + 1;
                                 break;
 
-                            /*
-                            case MenuItemType.Percentage:
-                                selectedItem.Data[0] = selectedItem.Data[0] == 100 ? 100 : selectedItem.Data[0] + 1;
-                                break;
-
-                            case MenuItemType.Value:
-                                selectedItem.Data[0] += 1;
-                                break;
-                            */
                         }
                         
                         break;
 
                     case MenuButtons.Back:
                         if (menu.AcceptInput)
-                        {
                             menu.AcceptInput = false;
-                            break;
-                        }
 
                         if (menus.Count > 1)
+                        {
+                            menu.Callback?.Invoke(buttons, menu, null);
                             menus.Pop();
+                        }
+                            
                         continue;
 
                     case MenuButtons.Exit:
+                        menu.Callback?.Invoke(buttons, menu, null);
                         Menus.Remove(controller);
                         continue;
                 }
@@ -158,7 +151,7 @@ public class Menu
         }
     }
 
-    public static void DrawMenu(CCSPlayerController controller, MenuBase menu, MenuItem selectedItem)
+    public static void DrawMenu(CCSPlayerController controller, MenuBase menu, MenuItem? selectedItem)
     {
         var html = "";
         var menus = Menus[controller];
@@ -170,21 +163,21 @@ public class Menu
                 var stackMenu = menus.ElementAt(i);
 
                 if (i == menus.Count - 1)
-                    html += $"{stackMenu.Title.Prefix}{stackMenu.Title.Value} - ";
+                    html += $"\u00A0{stackMenu.Title.Prefix}{stackMenu.Title.Value}{stackMenu.Separator}";
                 else if (i == 0)
                     html += $"{stackMenu.Title.Value}{stackMenu.Title.Suffix}";
                 else
-                    html += $"{stackMenu.Title.Value} - ";
+                    html += $"{stackMenu.Title.Value}{stackMenu.Separator}";
             }
         }
-        else 
-            html += menu.Title;
+        else
+            html += $"\u00A0{menu.Title}";
 
         foreach (var menuItem in menu.Items)
         {
             html += $"<br>\u00A0{menu.Title.Suffix}";
 
-            if (menuItem == selectedItem)
+            if (selectedItem != null && menuItem == selectedItem)
                 html += menu.Cursor[(int)MenuCursor.Left];
 
             if (menuItem.Head != null)
@@ -193,7 +186,7 @@ public class Menu
             switch (menuItem.Type)
             {
                 case MenuItemType.Choice or MenuItemType.ChoiceBool or MenuItemType.Button:
-                    html += FormatValues(menu, menuItem, selectedItem);
+                    html += FormatValues(menu, menuItem, selectedItem!);
                     break;
 
                 case MenuItemType.Slider:
@@ -212,7 +205,7 @@ public class Menu
             if (menuItem.Tail != null)
                 html += menuItem.Tail;
 
-            if (menuItem == selectedItem)
+            if (selectedItem != null && menuItem == selectedItem)
                 html += menu.Cursor[(int)MenuCursor.Right];
         }
 
@@ -310,7 +303,7 @@ public class Menu
             html += menu.Selector[(int)MenuCursor.Left].ToString();
 
         if (menuItem.DataString.Length == 0)
-            html += menu.Input[(int)MenuInput.Empty].ToString();
+            html += menu.Input.ToString();
         else
             html += menuItem.DataString;
 
@@ -325,7 +318,7 @@ public class Menu
         return menuItem.Data[0] == 0 ? menu.Bool[(int)MenuBool.False].ToString() : menu.Bool[(int)MenuBool.True].ToString();
     }
 
-    public void SetMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons, MenuBase, MenuItem> callback)
+    public void SetMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons, MenuBase, MenuItem?> callback)
     {
         if (!Menus.ContainsKey(controller))
             Menus.Add(controller, new Stack<MenuBase>());
@@ -335,7 +328,7 @@ public class Menu
         Menus[controller].Push(menu);
     }
 
-    public void AddMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons, MenuBase, MenuItem> callback)
+    public void AddMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons, MenuBase, MenuItem?> callback)
     {
         if (!Menus.ContainsKey(controller))
             Menus.Add(controller, new Stack<MenuBase>());
