@@ -15,6 +15,7 @@ First we need to import .dll into the .csproj
 Next we have to create a new Menu object
 ```cs
 using Menu;
+using Menu.Enums;
 
 public class Plugin : BasePlugin
 {
