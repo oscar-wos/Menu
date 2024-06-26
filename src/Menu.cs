@@ -13,21 +13,22 @@ public class Menu
     private static readonly SayEvent OnSayTeam = new("say_team", OnSayEvent);
     public static event EventHandler<MenuEvent>? OnDrawMenu;
 
-    private static void OnSayEvent(CCSPlayerController? controller, string message)
+    private static HookResult OnSayEvent(CCSPlayerController? controller, string message)
     {
         if (controller == null || !controller.IsValid || !Menus.TryGetValue(controller, out var value))
-            return;
+            return HookResult.Continue;
 
         var menu = value.Peek();
 
         if (!menu.AcceptInput)
-            return;
+            return HookResult.Continue;
 
         var selectedItem = menu.Items[menu.Option];
         selectedItem.DataString = message;
         menu.AcceptInput = false;
 
         menu.Callback?.Invoke(MenuButtons.Input, menu, selectedItem);
+        return HookResult.Handled;
     }
 
     protected static void RaiseDrawMenu(CCSPlayerController controller, MenuBase menu, MenuItem? selectedItem)
@@ -127,14 +128,17 @@ public class Menu
 
                     case MenuButtons.Back:
                         if (menu.AcceptInput)
+                        {
                             menu.AcceptInput = false;
+                            break;
+                        }
 
                         if (menus.Count > 1)
                         {
                             menu.Callback?.Invoke(buttons, menu, null);
                             menus.Pop();
                         }
-                            
+
                         continue;
 
                     case MenuButtons.Exit:
@@ -156,7 +160,9 @@ public class Menu
     public static void DrawMenu(CCSPlayerController controller, MenuBase menu, MenuItem? selectedItem)
     {
         var html = "";
-        var menus = Menus[controller];
+
+        if (!Menus.TryGetValue(controller, out var menus))
+            return;
 
         if (menus.Count > 1)
         {
@@ -196,7 +202,7 @@ public class Menu
                     break;
 
                 case MenuItemType.Input:
-                    html += FormatInput(menu, menuItem);
+                    html += FormatInput(menu, menuItem, selectedItem!);
                     break;
 
                 case MenuItemType.Bool:
@@ -297,19 +303,19 @@ public class Menu
         return html;
     }
 
-    private static string FormatInput(MenuBase menu, MenuItem menuItem)
+    private static string FormatInput(MenuBase menu, MenuItem menuItem, MenuItem selectedItem)
     {
         var html = "";
 
-        if (menu.AcceptInput)
+        if (menu.AcceptInput && menuItem == selectedItem)
             html += menu.Selector[(int)MenuCursor.Left].ToString();
 
         if (menuItem.DataString.Length == 0)
-            html += menu.Input.ToString();
+            html += menu.Input.Value;
         else
-            html += menuItem.DataString;
+            html += $"{menu.Input.Prefix}{menuItem.DataString}{menu.Input.Suffix}";
 
-        if (menu.AcceptInput)
+        if (menu.AcceptInput && menuItem == selectedItem)
             html += menu.Selector[(int)MenuCursor.Right].ToString();
 
         return html;
