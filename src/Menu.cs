@@ -26,6 +26,8 @@ public class Menu
         var selectedItem = menu.Items[menu.Option];
         selectedItem.DataString = message;
         menu.AcceptInput = false;
+
+        menu.Callback?.Invoke(MenuButtons.Input, menu, selectedItem);
     }
 
     protected static void RaiseDrawMenu(CCSPlayerController controller, MenuBase menu, MenuItem? selectedItem)

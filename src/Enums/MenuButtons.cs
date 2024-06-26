@@ -8,5 +8,6 @@ public enum MenuButtons : ulong
     Down = (1 << 4),
     Left = (1 << 9),
     Right = (1 << 10),
-    Exit = ((ulong)1 << 33)
+    Exit = ((ulong)1 << 33),
+    Input = ((ulong)1 << 63)
 }
