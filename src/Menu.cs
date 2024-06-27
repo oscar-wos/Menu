@@ -81,7 +81,8 @@ public class Menu
                         break;
 
                     case MenuButtons.Down when !menu.AcceptInput:
-                        menu.Option = menu.Option == selectItems.Count - 1 ? selectItems.Count - 1 : menu.Option + 1;
+                        if (selectItems.Count > 0)
+                            menu.Option = menu.Option == selectItems.Count - 1 ? selectItems.Count - 1 : menu.Option + 1;
                         break;
 
                     case MenuButtons.Left when !menu.AcceptInput:
