@@ -1,6 +1,4 @@
 ﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Timers;
-using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using Menu.Enums;
 
 namespace Menu;
@@ -8,9 +6,9 @@ namespace Menu;
 public class Menu
 {
     private static readonly Dictionary<CCSPlayerController, Stack<MenuBase>> Menus = [];
-    private static readonly Timer Timer = new(0.1f, TimerRepeat, TimerFlags.REPEAT);
     private static readonly SayEvent OnSay = new("say", OnSayEvent);
     private static readonly SayEvent OnSayTeam = new("say_team", OnSayEvent);
+    private static readonly OnTick OnTick = new(OnTickListener);
     public static event EventHandler<MenuEvent>? OnDrawMenu;
 
     private static HookResult OnSayEvent(CCSPlayerController? controller, string message)
@@ -31,12 +29,7 @@ public class Menu
         return HookResult.Handled;
     }
 
-    protected static void RaiseDrawMenu(CCSPlayerController controller, MenuBase menu, MenuItem? selectedItem)
-    {
-        OnDrawMenu?.Invoke(null, new MenuEvent(controller, menu, selectedItem));
-    }
-
-    private static void TimerRepeat()
+    private static void OnTickListener()
     {
         foreach (var (controller, menus) in Menus)
         {
@@ -45,7 +38,7 @@ public class Menu
                 Menus.Remove(controller);
                 continue;
             }
-            
+
             var menu = menus.Peek();
             var buttons = (MenuButtons)controller.Buttons;
             var selectItems = menu.Items.Where(menuItem => menuItem.Type is not (MenuItemType.Spacer or MenuItemType.Text)).ToList();
@@ -73,7 +66,7 @@ public class Menu
                                 menu.AcceptInput = true;
                                 break;
                         }
-                        
+
                         break;
 
                     case MenuButtons.Up when !menu.AcceptInput:
@@ -124,7 +117,7 @@ public class Menu
                                 break;
 
                         }
-                        
+
                         break;
 
                     case MenuButtons.Back:
@@ -156,6 +149,11 @@ public class Menu
             DrawMenu(controller, menu, selectedItem);
             RaiseDrawMenu(controller, menu, selectedItem);
         }
+    }
+
+    protected static void RaiseDrawMenu(CCSPlayerController controller, MenuBase menu, MenuItem? selectedItem)
+    {
+        OnDrawMenu?.Invoke(null, new MenuEvent(controller, menu, selectedItem));
     }
 
     public static void DrawMenu(CCSPlayerController controller, MenuBase menu, MenuItem? selectedItem)
