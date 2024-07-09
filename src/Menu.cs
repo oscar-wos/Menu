@@ -141,7 +141,7 @@ public class Menu
                         continue;
                 }
 
-                if (buttons != 0)
+                if (buttons != 0 && buttons != MenuButtons.Back)
                     menu.Callback?.Invoke(buttons, menu, selectedItem);
             }
 
