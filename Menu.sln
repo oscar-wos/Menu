@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Menu", "src\Menu.csproj", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Example", "Example\Example.csproj", "{A5A96213-72CC-4E43-BD6C-0BC567C7029C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlashingXMLHintFix", "FlashingXMLHintFix\src\FlashingXMLHintFix.csproj", "{7A420669-8C62-4C3D-AD46-5D86B330991B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{A5A96213-72CC-4E43-BD6C-0BC567C7029C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5A96213-72CC-4E43-BD6C-0BC567C7029C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5A96213-72CC-4E43-BD6C-0BC567C7029C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A420669-8C62-4C3D-AD46-5D86B330991B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A420669-8C62-4C3D-AD46-5D86B330991B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A420669-8C62-4C3D-AD46-5D86B330991B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A420669-8C62-4C3D-AD46-5D86B330991B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
