@@ -1,4 +1,4 @@
-﻿namespace Menu;
+﻿namespace Menus;
 
 public interface IMenuFormat
 {

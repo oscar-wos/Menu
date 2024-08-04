@@ -1,10 +1,10 @@
 ﻿using CounterStrikeSharp.API.Core;
 
-namespace Menu;
+namespace Menus.Hooks;
 
-public class SayEvent
+public class OnSay
 {
-    public SayEvent(string sayCommand, Func<CCSPlayerController, string, HookResult> callback)
+    public OnSay(string command, Func<CCSPlayerController, string, HookResult> callback)
     {
         var wrappedHandler = new Func<int, IntPtr, HookResult>((i, ptr) =>
         {
@@ -12,7 +12,6 @@ public class SayEvent
             return callback.Invoke(caller!, NativeAPI.CommandGetArgString(ptr).Trim('"'));
         });
 
-        var functionReference = FunctionReference.Create(wrappedHandler);
-        NativeAPI.AddCommandListener(sayCommand, functionReference, false);
+        NativeAPI.AddCommandListener(command, FunctionReference.Create(wrappedHandler), false);
     }
 }

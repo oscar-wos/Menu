@@ -1,4 +1,4 @@
-﻿namespace Menu;
+﻿namespace Menus;
 
 public class MenuValue(string value) : IMenuFormat
 {

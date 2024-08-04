@@ -1,13 +1,14 @@
-﻿namespace Menu.Enums;
+﻿namespace Menus.Enums;
 
-public enum MenuButtons : ulong
+public enum MenuButtons
 {
-    Select = (1 << 1),
-    Back = (1 << 2),
-    Up = (1 << 3),
-    Down = (1 << 4),
-    Left = (1 << 9),
-    Right = (1 << 10),
-    Exit = ((ulong)1 << 33),
-    Input = ((ulong)1 << 63)
+    Up,
+    Down,
+    Left,
+    Right,
+    Select,
+    Back,
+    Exit,
+    Input,
+    InputBack
 }
