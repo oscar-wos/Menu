@@ -6,6 +6,6 @@ public static class ControllerExtends
 {
     public static bool IsValid(this CCSPlayerController? controller)
     {
-        return controller != null && controller.IsValid;
+        return controller != null && controller is { IsValid: true, Connected: PlayerConnectedState.PlayerConnected };
     }
 }

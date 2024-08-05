@@ -5,13 +5,9 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
-	
+
 	<ItemGroup>
-		<PackageReference Include="CounterStrikeSharp.API" Version="*" ExcludeAssets="runtime" />
-	</ItemGroup>
-	
-	<ItemGroup>
-	  <ProjectReference Include="..\src\Menus.csproj" />
+	  <PackageReference Include="CounterStrikeSharp.API" Version="*" />
 	</ItemGroup>
 
 </Project>

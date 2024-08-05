@@ -18,25 +18,36 @@ public static class Menu
 
     private static void OnTickListener()
     {
+        foreach (var (controller, value) in Menus)
+        {
+            if (!controller.IsValid() || value.Count == 0)
+            {
+                Menus.Remove(controller);
+                continue;
+            }
+
+            //test
+
+        }
     }
 
-    public static void Set(CCSPlayerController controller, MenuBase menu, Action<MenuButtons, MenuBase?, MenuItem?> callback)
+    public static void Set(CCSPlayerController controller, MenuBase menu, Action<MenuAction, MenuBase?, MenuItem?> callback)
     {
         menu.Callback = callback;
     }
 
-    public static void Add(CCSPlayerController controller, MenuBase menu, Action<MenuButtons, MenuBase?, MenuItem?> callback)
+    public static void Add(CCSPlayerController controller, MenuBase menu, Action<MenuAction, MenuBase?, MenuItem?> callback)
     {
         menu.Callback = callback;
     }
 
-    public static bool Clear(CCSPlayerController controller, bool invoke = false)
+    public static bool Close(CCSPlayerController controller, bool invoke = false)
     {
         if (!Menus.TryGetValue(controller, out var value))
             return false;
 
-        if (invoke && value.Count > 0)
-            value.Peek().Callback?.Invoke(MenuButtons.Exit, null, null);
+        if (invoke)
+            value.Peek().Callback?.Invoke(MenuAction.Exit, null, null);
 
         value.Clear();
         return true;
@@ -53,7 +64,7 @@ public static class Menu
             return false;
 
         if (invoke)
-            peek.Callback?.Invoke(value.Count == 1 ? MenuButtons.Exit : MenuButtons.Back, null, null);
+            peek.Callback?.Invoke(value.Count == 1 ? MenuAction.Exit : MenuAction.Back, null, null);
 
         value.Pop();
         return true;

@@ -2,13 +2,8 @@
 
 namespace Menus;
 
-public class MenuBase
+public class MenuBase(MenuOptions? options = null)
 {
-    private readonly MenuOptions _options;
-    public Action<MenuButtons, MenuBase?, MenuItem?>? Callback;
-
-    public MenuBase(MenuValue title, MenuOptions? options = null)
-    {
-        _options = options ?? new MenuOptions();
-    }
+    private readonly MenuOptions _options = options ?? new MenuOptions();
+    public Action<MenuAction, MenuBase?, MenuItem?>? Callback;
 }

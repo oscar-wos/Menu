@@ -1,6 +1,6 @@
 ﻿namespace Menus.Enums;
 
-public enum MenuButtons
+public enum MenuAction
 {
     Up,
     Down,
@@ -10,4 +10,6 @@ public enum MenuButtons
     Back,
     Exit,
     Special,
+    Input,
+    InputBack
 }
