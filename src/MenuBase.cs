@@ -1,48 +1,9 @@
-﻿using Menu.Enums;
+﻿using Menus.Enums;
 
-namespace Menu;
+namespace Menus;
 
-public class MenuBase(MenuValue title)
+public class MenuBase(MenuOptions? options = null)
 {
-    public Action<MenuButtons, MenuBase, MenuItem?>? Callback;
-    public MenuValue Title { get; set; } = title;
-    public List<MenuItem> Items { get; set; } = [];
-    public int Option { get; set; } = 0;
-
-    public bool AcceptButtons { get; set; } = false;
-    public bool AcceptInput { get; set; } = false;
-
-    public MenuValue[] Cursor =
-    [
-        new MenuValue("►") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("◄") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
-
-    public MenuValue[] Selector =
-    [
-        new MenuValue("[ ") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue(" ]") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
-
-    public MenuValue[] Bool =
-    [
-        new MenuValue("✘") { Prefix = "<font color=\"#FF0000\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("✔") { Prefix = "<font color=\"#008000\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
-
-    public MenuValue[] Slider =
-    [
-        new MenuValue("(") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue(")") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("-") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("|") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
-
-    public MenuValue Input = new("________") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" };
-    public MenuValue Separator = new(" - ") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" };
-
-    public void AddItem(MenuItem item)
-    {
-        Items.Add(item);
-    }
+    private readonly MenuOptions _options = options ?? new MenuOptions();
+    public Action<MenuAction, MenuBase?, MenuItem?>? Callback;
 }
