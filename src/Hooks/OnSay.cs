@@ -9,7 +9,7 @@ public class OnSay
         var wrappedHandler = new Func<int, IntPtr, HookResult>((i, ptr) =>
         {
             var caller = (i != -1) ? new CCSPlayerController(NativeAPI.GetEntityFromIndex(i + 1)) : null;
-            return callback.Invoke(caller!, NativeAPI.CommandGetArgString(ptr).Trim('"'));
+            return callback.Invoke(caller!, NativeAPI.CommandGetArgString(ptr)[1..^1]);
         });
 
         NativeAPI.AddCommandListener(command, FunctionReference.Create(wrappedHandler), false);
