@@ -1,6 +1,6 @@
 ﻿namespace Menus.Enums;
 
-public enum MenuButtons
+public enum MenuButton
 {
     Up,
     Down,

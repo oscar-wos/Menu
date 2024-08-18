@@ -14,14 +14,14 @@ public class MenuInput<T> where T : struct, Enum
         {
             _values[Convert.ToUInt16(button)] = button switch
             {
-                MenuButtons.Up => 1UL << 3,
-                MenuButtons.Down => 1UL << 4,
-                MenuButtons.Left => 1UL << 9,
-                MenuButtons.Right => 1UL << 10,
-                MenuButtons.Select => 1UL << 5,
-                MenuButtons.Back => 1UL << 17,
-                MenuButtons.Exit => 1UL << 33,
-                MenuButtons.Special => 1UL << 13,
+                MenuButton.Up => 1UL << 3,
+                MenuButton.Down => 1UL << 4,
+                MenuButton.Left => 1UL << 9,
+                MenuButton.Right => 1UL << 10,
+                MenuButton.Select => 1UL << 5,
+                MenuButton.Back => 1UL << 17,
+                MenuButton.Exit => 1UL << 33,
+                MenuButton.Special => 1UL << 13,
                 _ => 0
             };
         }

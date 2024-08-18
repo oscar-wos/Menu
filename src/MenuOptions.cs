@@ -6,5 +6,6 @@ public class MenuOptions
 {
     public MenuTitleStyle TitleStyle { get; set; } = MenuTitleStyle.Sub;
     public MenuPagination Pagination { get; set; } = MenuPagination.None;
-    public MenuInput<MenuButtons> Buttons { get; set; } = new();
+    public MenuInput<MenuButton> Buttons { get; set; } = new();
+    public int Priority { get; set; } = 0;
 }

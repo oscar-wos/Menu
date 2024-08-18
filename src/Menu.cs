@@ -6,7 +6,7 @@ namespace Menus;
 
 public static class Menu
 {
-    private static readonly Dictionary<CCSPlayerController, Stack<MenuBase>> Menus = [];
+    private static readonly Dictionary<CCSPlayerController, Stack<Stack<MenuBase>>> Menus = [];
     private static readonly OnSay OnSay = new("say", OnSayListener);
     private static readonly OnSay OnSayTeam = new("say_team", OnSayListener);
     private static readonly OnTick OnTick = new(OnTickListener);
@@ -18,20 +18,27 @@ public static class Menu
 
     private static void OnTickListener()
     {
-        foreach (var (controller, value) in Menus)
+        foreach (var (controller, menus) in Menus)
         {
-            if (!controller.IsValid() || value.Count == 0)
+            if (!controller.IsValid() || menus.Count == 0)
             {
                 Menus.Remove(controller);
                 continue;
             }
 
-            //test
+            var currentStack = menus.Peek();
 
+            if (currentStack.Count == 0)
+            {
+                menus.Pop();
+                continue;
+            }
+
+            var currentMenu = currentStack.Peek();
         }
     }
 
-    public static void Set(CCSPlayerController controller, MenuBase menu, Action<MenuAction, MenuBase?, MenuItem?> callback)
+    public static void Set(CCSPlayerController controller, MenuBase menu, bool save, Action<MenuAction, MenuBase?, MenuItem?> callback)
     {
         menu.Callback = callback;
     }
@@ -41,32 +48,57 @@ public static class Menu
         menu.Callback = callback;
     }
 
-    public static bool Close(CCSPlayerController controller, bool invoke = false)
+    public static bool Pop(CCSPlayerController controller, bool invoke = false, MenuBase? menu = null)
     {
-        if (!Menus.TryGetValue(controller, out var value))
+        if (!Menus.TryGetValue(controller, out var menus) || menus.Count == 0)
+            return false;
+
+        var currentStack = menus.Peek();
+
+        if (currentStack.Count == 0)
+            return false;
+
+        var currentMenu = currentStack.Peek();
+
+        if (menu != null && currentMenu != menu)
             return false;
 
         if (invoke)
-            value.Peek().Callback?.Invoke(MenuAction.Exit, null, null);
+            currentMenu.Callback?.Invoke(currentStack.Count == 1 ? MenuAction.Exit : MenuAction.Back, null, null);
 
-        value.Clear();
+        currentStack.Pop();
         return true;
     }
 
-    public static bool Pop(CCSPlayerController controller, MenuBase? menu = null, bool invoke = false)
+    public static bool Close(CCSPlayerController controller, bool invoke = false)
     {
-        if (!Menus.TryGetValue(controller, out var value) || value.Count == 0)
+        if (!Menus.TryGetValue(controller, out var menus) || menus.Count == 0)
             return false;
 
-        var peek = value.Peek();
+        var currentStack = menus.Peek();
 
-        if (menu != null && peek != menu)
+        if (currentStack.Count == 0)
+            return false;
+
+        var currentMenu = currentStack.Peek();
+
+        if (invoke)
+            currentMenu.Callback?.Invoke(MenuAction.Exit, null, null);
+
+        currentStack.Clear();
+        return true;
+    }
+
+    public static bool Clear(CCSPlayerController controller, bool invoke = false)
+    {
+        if (!Menus.TryGetValue(controller, out var menus) || menus.Count == 0)
             return false;
 
         if (invoke)
-            peek.Callback?.Invoke(value.Count == 1 ? MenuAction.Exit : MenuAction.Back, null, null);
+            foreach (var menu in menus.Peek())
+                menu.Callback?.Invoke(MenuAction.Exit, null, null);
 
-        value.Pop();
+        menus.Clear();
         return true;
     }
 }
