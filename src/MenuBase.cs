@@ -1,48 +1,27 @@
-﻿using Menu.Enums;
+﻿using Menus.Enums;
 
-namespace Menu;
+namespace Menus;
 
-public class MenuBase(MenuValue title)
+public class MenuBase(MenuOptions? options = null)
 {
-    public Action<MenuButtons, MenuBase, MenuItem?>? Callback;
-    public MenuValue Title { get; set; } = title;
+    public readonly MenuOptions Options = options ?? new MenuOptions();
+    public readonly Dictionary<MenuButton, float[]> InputDelay = [];
+    public Action<MenuAction, MenuBase?, MenuItem?>? Callback;
+    
     public List<MenuItem> Items { get; set; } = [];
     public int Option { get; set; } = 0;
+    private MenuButton LastAction { get; set; } = MenuButton.Up;
 
-    public bool AcceptButtons { get; set; } = false;
     public bool AcceptInput { get; set; } = false;
 
-    public MenuValue[] Cursor =
-    [
-        new MenuValue("►") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("◄") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
-
-    public MenuValue[] Selector =
-    [
-        new MenuValue("[ ") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue(" ]") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
-
-    public MenuValue[] Bool =
-    [
-        new MenuValue("✘") { Prefix = "<font color=\"#FF0000\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("✔") { Prefix = "<font color=\"#008000\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
-
-    public MenuValue[] Slider =
-    [
-        new MenuValue("(") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue(")") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("-") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("|") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
-
-    public MenuValue Input = new("________") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" };
-    public MenuValue Separator = new(" - ") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" };
-
-    public void AddItem(MenuItem item)
+    public void Input(MenuButton button)
     {
-        Items.Add(item);
+        if (AcceptInput && button != MenuButton.Back)
+            return;
+
+        switch (button)
+        {
+
+        }
     }
 }

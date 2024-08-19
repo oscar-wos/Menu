@@ -1,10 +1,13 @@
-﻿namespace Menu;
+﻿using Menus.Enums;
 
-public class MenuValue(string value) : IMenuFormat
+namespace Menus;
+
+public class MenuValue(string value, MenuFontSize size = MenuFontSize.M, string? prefix = "", string? suffix = "")
 {
     public string Value { get; set; } = value;
-    public string Prefix { get; set; } = "";
-    public string Suffix { get; set; } = "";
+    public MenuFontSize Size { get; set; } = size;
+    public string? Prefix { get; set; } = prefix;
+    public string? Suffix { get; set; } = suffix;
 
     public override string ToString()
     {

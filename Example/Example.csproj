@@ -11,7 +11,7 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <ProjectReference Include="..\src\Menu.csproj" />
+	  <ProjectReference Include="..\src\Menus.csproj" />
 	</ItemGroup>
 
 </Project>
