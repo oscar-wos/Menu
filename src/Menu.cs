@@ -1,10 +1,11 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using Menus.Enums;
 using Menus.Hooks;
 
 namespace Menus;
 
-public static class Menu
+public static partial class Menu
 {
     private static readonly Dictionary<CCSPlayerController, Stack<Stack<MenuBase>>> Menus = [];
     private static readonly OnSay OnSay = new("say", OnSayListener);
@@ -35,70 +36,40 @@ public static class Menu
             }
 
             var currentMenu = currentStack.Peek();
+
+            InputButtons(controller, currentMenu);
+            DrawMenu(controller, currentMenu);
         }
     }
 
-    public static void Set(CCSPlayerController controller, MenuBase menu, bool save, Action<MenuAction, MenuBase?, MenuItem?> callback)
+    private static void InputButtons(CCSPlayerController controller, MenuBase menu)
     {
-        menu.Callback = callback;
+        foreach (MenuButton button in Enum.GetValues(typeof(MenuButton)))
+        {
+            if (((ulong)controller.Buttons & menu.Options.Buttons[button]) == menu.Options.Buttons[button])
+            {
+                if (!menu.InputDelay[button].Contains(0))
+                    menu.InputDelay[button][0] = Server.CurrentTime;
+                else
+                {
+                    if (Server.CurrentTime - menu.InputDelay[button][0] < menu.Options.ButtonsFirstDelay)
+                        continue;
+
+                    if (!menu.InputDelay[button].Contains(1) || Server.CurrentTime - menu.InputDelay[button][1] >= menu.Options.ButtonsContinuousDelay)
+                        menu.InputDelay[button][1] = Server.CurrentTime;
+                    else
+                        continue;
+                }
+
+                menu.Input(button);
+            }
+            else
+                menu.InputDelay[button] = [];
+        }
     }
 
-    public static void Add(CCSPlayerController controller, MenuBase menu, Action<MenuAction, MenuBase?, MenuItem?> callback)
+    private static void DrawMenu(CCSPlayerController controller, MenuBase menu)
     {
-        menu.Callback = callback;
-    }
 
-    public static bool Pop(CCSPlayerController controller, bool invoke = false, MenuBase? menu = null)
-    {
-        if (!Menus.TryGetValue(controller, out var menus) || menus.Count == 0)
-            return false;
-
-        var currentStack = menus.Peek();
-
-        if (currentStack.Count == 0)
-            return false;
-
-        var currentMenu = currentStack.Peek();
-
-        if (menu != null && currentMenu != menu)
-            return false;
-
-        if (invoke)
-            currentMenu.Callback?.Invoke(currentStack.Count == 1 ? MenuAction.Exit : MenuAction.Back, null, null);
-
-        currentStack.Pop();
-        return true;
-    }
-
-    public static bool Close(CCSPlayerController controller, bool invoke = false)
-    {
-        if (!Menus.TryGetValue(controller, out var menus) || menus.Count == 0)
-            return false;
-
-        var currentStack = menus.Peek();
-
-        if (currentStack.Count == 0)
-            return false;
-
-        var currentMenu = currentStack.Peek();
-
-        if (invoke)
-            currentMenu.Callback?.Invoke(MenuAction.Exit, null, null);
-
-        currentStack.Clear();
-        return true;
-    }
-
-    public static bool Clear(CCSPlayerController controller, bool invoke = false)
-    {
-        if (!Menus.TryGetValue(controller, out var menus) || menus.Count == 0)
-            return false;
-
-        if (invoke)
-            foreach (var menu in menus.Peek())
-                menu.Callback?.Invoke(MenuAction.Exit, null, null);
-
-        menus.Clear();
-        return true;
     }
 }
