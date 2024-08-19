@@ -14,6 +14,15 @@ public static partial class Menu
 
     private static HookResult OnSayListener(CCSPlayerController? controller, string message)
     {
+        if (controller == null || !controller.IsValid())
+            return HookResult.Continue;
+
+        var menu = Get(controller);
+
+        if (menu is not { AcceptInput: true })
+            return HookResult.Continue;
+
+        menu.Callback?.Invoke(MenuAction.Input, null, null);
         return HookResult.Handled;
     }
 
@@ -27,18 +36,18 @@ public static partial class Menu
                 continue;
             }
 
-            var currentStack = menus.Peek();
+            var stack = menus.Peek();
 
-            if (currentStack.Count == 0)
+            if (stack.Count == 0)
             {
                 menus.Pop();
                 continue;
             }
 
-            var currentMenu = currentStack.Peek();
+            var menu = stack.Peek();
 
-            InputButtons(controller, currentMenu);
-            DrawMenu(controller, currentMenu);
+            InputButtons(controller, menu);
+            DrawMenu(controller, menu);
         }
     }
 

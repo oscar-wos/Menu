@@ -15,25 +15,20 @@ public static partial class Menu
         menu.Callback = callback;
     }
 
-    public static bool Pop(CCSPlayerController controller, bool invoke = false, MenuBase? menu = null)
+    public static bool Pop(CCSPlayerController controller, bool invoke = false)
     {
         if (!Menus.TryGetValue(controller, out var menus) || menus.Count == 0)
             return false;
 
-        var currentStack = menus.Peek();
+        var stack = menus.Peek();
 
-        if (currentStack.Count == 0)
-            return false;
-
-        var currentMenu = currentStack.Peek();
-
-        if (menu != null && currentMenu != menu)
+        if (stack.Count == 0)
             return false;
 
         if (invoke)
-            currentMenu.Callback?.Invoke(currentStack.Count == 1 ? MenuAction.Exit : MenuAction.Back, null, null);
+            stack.Peek().Callback?.Invoke(stack.Count == 1 ? MenuAction.Exit : MenuAction.Back, null, null);
 
-        currentStack.Pop();
+        stack.Pop();
         return true;
     }
 
@@ -42,17 +37,15 @@ public static partial class Menu
         if (!Menus.TryGetValue(controller, out var menus) || menus.Count == 0)
             return false;
 
-        var currentStack = menus.Peek();
+        var stack = menus.Peek();
 
-        if (currentStack.Count == 0)
+        if (stack.Count == 0)
             return false;
 
-        var currentMenu = currentStack.Peek();
-
         if (invoke)
-            currentMenu.Callback?.Invoke(MenuAction.Exit, null, null);
+            stack.Peek().Callback?.Invoke(MenuAction.Exit, null, null);
 
-        currentStack.Clear();
+        stack.Clear();
         return true;
     }
 
@@ -62,10 +55,19 @@ public static partial class Menu
             return false;
 
         if (invoke)
-            foreach (var menu in menus.Peek())
-                menu.Callback?.Invoke(MenuAction.Exit, null, null);
+            foreach (var menu in menus.Where(s => s.Count > 0))
+                menu.Peek().Callback?.Invoke(MenuAction.Exit, null, null);
 
         menus.Clear();
         return true;
+    }
+
+    public static MenuBase? Get(CCSPlayerController controller)
+    {
+        if (!Menus.TryGetValue(controller, out var menus) || menus.Count == 0)
+            return null;
+
+        var stack = menus.Peek();
+        return stack.Count == 0 ? null : stack.Peek();
     }
 }

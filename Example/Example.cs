@@ -20,7 +20,7 @@ public class Example : BasePlugin
 
             Menu.Add(controller, new MenuBase(), (_, _, _) =>
             {
-
+                var currentMenu = Menu.Get(controller);
             });
         });
     }
