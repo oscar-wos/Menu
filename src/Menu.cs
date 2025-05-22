@@ -1,83 +1,63 @@
-﻿using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
-using Menus.Enums;
-using Menus.Hooks;
+﻿using CounterStrikeSharp.API.Core;
+using System.Collections.Concurrent;
 
-namespace Menus;
+namespace RMenu;
 
-public static partial class Menu
+public static class Menu
 {
-    private static readonly Dictionary<CCSPlayerController, Stack<Stack<MenuBase>>> Menus = [];
-    private static readonly OnSay OnSay = new("say", OnSayListener);
-    private static readonly OnSay OnSayTeam = new("say_team", OnSayListener);
-    private static readonly OnTick OnTick = new(OnTickListener);
+    private static readonly ConcurrentDictionary<CCSPlayerController, List<Stack<MenuBase>>> _menus = [];
+    private static readonly ConcurrentDictionary<CCSPlayerController, string> _currentMenu = [];
+    private static readonly Timer _menuTimer = new(ProcessMenu, null, 0, 100);
 
-    private static HookResult OnSayListener(CCSPlayerController? controller, string message)
+    static Menu()
     {
-        if (controller == null || !controller.IsValid())
-            return HookResult.Continue;
-
-        var menu = Get(controller);
-
-        if (menu is not { AcceptInput: true })
-            return HookResult.Continue;
-
-        menu.Callback?.Invoke(MenuAction.Input, null, null);
-        return HookResult.Handled;
+        NativeAPI.AddListener("OnTick", FunctionReference.Create(OnTick));
     }
 
-    private static void OnTickListener()
+    private static void ProcessMenu(object? state)
     {
-        foreach (var (controller, menus) in Menus)
+        Parallel.ForEach(_menus, kvp =>
         {
-            if (!controller.IsValid() || menus.Count == 0)
-            {
-                Menus.Remove(controller);
-                continue;
-            }
+            var player = kvp.Key;
 
-            var stack = menus.Peek();
+            if (!player.IsValid)
+                return;
 
-            if (stack.Count == 0)
-            {
-                menus.Pop();
-                continue;
-            }
-
-            var menu = stack.Peek();
-
-            InputButtons(controller, menu);
-            DrawMenu(controller, menu);
-        }
+            _currentMenu[player] = string.Empty;
+        });
     }
 
-    private static void InputButtons(CCSPlayerController controller, MenuBase menu)
+    private static void OnTick()
     {
-        foreach (MenuButton button in Enum.GetValues(typeof(MenuButton)))
+        Parallel.ForEach(_currentMenu, kvp =>
         {
-            if (((ulong)controller.Buttons & menu.Options.Buttons[button]) == menu.Options.Buttons[button])
+            var player = kvp.Key;
+
+            if (!player.IsValid)
             {
-                if (!menu.InputDelay[button].Contains(0))
-                    menu.InputDelay[button][0] = Server.CurrentTime;
-                else
-                {
-                    if (Server.CurrentTime - menu.InputDelay[button][0] < menu.Options.ButtonsFirstDelay)
-                        continue;
-
-                    if (!menu.InputDelay[button].Contains(1) || Server.CurrentTime - menu.InputDelay[button][1] >= menu.Options.ButtonsContinuousDelay)
-                        menu.InputDelay[button][1] = Server.CurrentTime;
-                    else
-                        continue;
-                }
-
-                menu.Input(button);
+                _menus.TryRemove(player, out _);
+                _currentMenu.TryRemove(player, out _);
+                return;
             }
-            else
-                menu.InputDelay[button] = [];
-        }
+
+            var menuString = kvp.Value;
+
+            if (menuString != string.Empty)
+                player.PrintToCenterHtml(menuString);
+        });
     }
 
-    private static void DrawMenu(CCSPlayerController controller, MenuBase menu)
+    public static void Add(CCSPlayerController player, MenuBase menu)
+    {
+
+    }
+
+    public static void Remove(CCSPlayerController player, MenuBase menu)
+    {
+        
+    }
+
+    public static void Clear(CCSPlayerController player)
     {
 
     }

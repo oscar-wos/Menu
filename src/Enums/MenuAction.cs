@@ -1,15 +1,11 @@
-﻿namespace Menus.Enums;
+﻿namespace RMenu.Enums;
 
 public enum MenuAction
 {
-    Up,
-    Down,
-    Left,
-    Right,
+    Start,
     Select,
-    Back,
-    Exit,
-    Special,
+    Update,
     Input,
-    InputBack
+    Cancel,
+    Assist
 }
