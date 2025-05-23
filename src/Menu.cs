@@ -13,6 +13,7 @@ public static partial class Menu
     private static readonly MemoryFunctionVoid<CPlayer_MovementServices, IntPtr> _runCommand = new("40 53 56 57 48 81 EC 80 00 00 00 0F");
     private static readonly MemoryFunctionVoid<CPlayer_ObserverServices, int> _changeSpecMode = new("48 89 74 24 18 55 41 56 41 57 48 8D AC");
     private static readonly Timer _menuTimer = new(ProcessMenu, null, 0, 100);
+    public static event EventHandler<MenuEvent>? OnDrawMenu;
 
     static Menu()
     {
@@ -36,8 +37,11 @@ public static partial class Menu
 
             var menuString = kvp.Value;
 
-            if (menuString != string.Empty)
-                player.PrintToCenterHtml(menuString);
+            if (menuString == string.Empty)
+                return;
+
+            player.PrintToCenterHtml(menuString);
+            OnDrawMenu?.Invoke(null, new MenuEvent(player, Get(player)));
         });
     }
 

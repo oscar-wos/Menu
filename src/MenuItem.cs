@@ -2,8 +2,49 @@
 
 namespace RMenu;
 
-public class MenuItem(bool pinwheel = false)
+public class MenuItem
 {
-    private readonly bool Pinwheel = pinwheel;
-    private MenuButton LastAction { get; set; } = MenuButton.Left;
+    public MenuItemType Type { get; init; }
+    public MenuValue? Head { get; set; }
+    public MenuValue? Tail { get; set; }
+    public List<MenuItem>? Values { get; set; }
+    public MenuItemOptions Options { get; set; }
+
+    public MenuItem(MenuItemType type, MenuValue head, List<MenuItem> values, MenuValue tail, MenuItemOptions? options = null)
+    {
+        Type = type;
+        Head = head;
+        Values = values;
+        Tail = tail;
+        Options = options ?? new MenuItemOptions();
+    }
+
+    public MenuItem(MenuItemType type, MenuValue head, List<MenuItem> values, MenuItemOptions? options = null)
+    {
+        Type = type;
+        Head = head;
+        Values = values;
+        Options = options ?? new MenuItemOptions();
+    }
+
+    public MenuItem(MenuItemType type, List<MenuItem> values, MenuValue tail, MenuItemOptions? options = null)
+    {
+        Type = type;
+        Values = values;
+        Tail = tail;
+        Options = options ?? new MenuItemOptions();
+    }
+
+    public MenuItem(MenuItemType type, MenuValue head, MenuItemOptions? options = null)
+    {
+        Type = type;
+        Head = head;
+        Options = options ?? new MenuItemOptions();
+    }
+
+    public MenuItem(MenuItemType type, MenuItemOptions? options = null)
+    {
+        Type = type;
+        Options = options ?? new MenuItemOptions();
+    }
 }
