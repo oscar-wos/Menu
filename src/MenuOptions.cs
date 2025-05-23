@@ -10,7 +10,6 @@ public class MenuOptions
     public bool Exitable { get; set; } = true;
     public bool BlockMovement { get; set; } = false;
     public bool BlockJump { get; set; } = false;
+    public int ButtonsDelay { get; set; } = 100;
     public MenuInput<MenuButton> Buttons { get; set; } = new();
-
-    public float ButtonsDelay { get; set; } = 1.0f;
 }

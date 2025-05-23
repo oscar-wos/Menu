@@ -1,5 +1,4 @@
-﻿using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using RMenu.Enums;
 using RMenu.Structs;
@@ -69,10 +68,10 @@ public static partial class Menu
         {
             if ((buttons & menu.Options.Buttons[button]) == menu.Options.Buttons[button])
             {
-                if (menu.InputDelay[(int)button] + menu.Options.ButtonsDelay > Server.CurrentTime)
+                if (menu.InputDelay[(int)button] + menu.Options.ButtonsDelay > Environment.TickCount64)
                     continue;
 
-                menu.InputDelay[(int)button] = Server.CurrentTime;
+                menu.InputDelay[(int)button] = Environment.TickCount64;
                 menu.Input(button);
             }
         }
@@ -92,7 +91,8 @@ public static partial class Menu
         if (menu == null || !menu.Options.ProcessInput)
             return HookResult.Continue;
 
-        return HookResult.Continue;
+        menu.Input(MenuButton.Select);
+        return HookResult.Stop;
     }
 
     private static void ProcessMenu(object? state)
