@@ -1,5 +1,8 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
+using RMenu.Enums;
+using RMenu.Structs;
 using System.Collections.Concurrent;
 
 namespace RMenu;
@@ -7,11 +10,10 @@ namespace RMenu;
 public static partial class Menu
 {
     private static readonly ConcurrentDictionary<CCSPlayerController, List<Stack<MenuBase>>> _menus = [];
-    private static readonly ConcurrentDictionary<CCSPlayerController, string> _currentMenu = [];
+    private static readonly ConcurrentDictionary<CCSPlayerController, string> _currentMenuHtml = [];
+    private static readonly MemoryFunctionVoid<CPlayer_MovementServices, IntPtr> _runCommand = new("40 53 56 57 48 81 EC 80 00 00 00 0F");
+    private static readonly MemoryFunctionVoid<CPlayer_ObserverServices, int> _changeSpecMode = new("48 89 74 24 18 55 41 56 41 57 48 8D AC");
     private static readonly Timer _menuTimer = new(ProcessMenu, null, 0, 100);
-    private static readonly MemoryFunctionVoid<IntPtr, IntPtr> _runCommand = new("40 53 56 57 48 81 EC 80 00 00 00 0F");
-    private static readonly MemoryFunctionVoid<IntPtr, int> _changeSpecMode = new("48 89 74 24 18 55 41 56 41 57 48 8D AC");
-
 
     static Menu()
     {
@@ -20,13 +22,76 @@ public static partial class Menu
         _changeSpecMode.Hook(ChangeSpecMode, HookMode.Pre);
     }
 
-    private static HookResult RunCommand(DynamicHook h)
+    private static void OnTick()
     {
+        Parallel.ForEach(_currentMenuHtml, kvp =>
+        {
+            var player = kvp.Key;
+
+            if (!player.IsValid)
+            {
+                _menus.Remove(player, out _);
+                _currentMenuHtml.Remove(player, out _);
+                return;
+            }
+
+            var menuString = kvp.Value;
+
+            if (menuString != string.Empty)
+                player.PrintToCenterHtml(menuString);
+        });
+    }
+
+    private unsafe static HookResult RunCommand(DynamicHook h)
+    {
+        var player = h.GetParam<CPlayer_MovementServices>(0).Pawn.Value.Controller.Value?.As<CCSPlayerController>();
+
+        if (player == null || !player.IsValid)
+            return HookResult.Continue;
+
+        var menu = Get(player);
+
+        if (menu == null || !menu.Options.ProcessInput)
+            return HookResult.Continue;
+
+        var userCmd = (CUserCmd*)h.GetParam<IntPtr>(1);
+
+        if (menu.Options.BlockMovement)
+        {
+            userCmd->BaseUserCmd->m_flForwardMove = 0;
+            userCmd->BaseUserCmd->m_flSideMove = 0;
+            userCmd->BaseUserCmd->m_flUpMove = 0;
+        }
+
+        var buttons = (ulong)userCmd->ButtonState->PressedButtons;
+
+        foreach (MenuButton button in Enum.GetValues(typeof(MenuButton)))
+        {
+            if ((buttons & menu.Options.Buttons[button]) == menu.Options.Buttons[button])
+            {
+                if (menu.InputDelay[(int)button] + menu.Options.ButtonsDelay > Server.CurrentTime)
+                    continue;
+
+                menu.InputDelay[(int)button] = Server.CurrentTime;
+                menu.Input(button);
+            }
+        }
+
         return HookResult.Continue;
     }
 
     private static HookResult ChangeSpecMode(DynamicHook h)
     {
+        var player = h.GetParam<CPlayer_ObserverServices>(0).Pawn.Value.Controller.Value?.As<CCSPlayerController>();
+
+        if (player == null || !player.IsValid)
+            return HookResult.Continue;
+
+        var menu = Get(player);
+
+        if (menu == null || !menu.Options.ProcessInput)
+            return HookResult.Continue;
+
         return HookResult.Continue;
     }
 
@@ -39,27 +104,7 @@ public static partial class Menu
             if (!player.IsValid)
                 return;
 
-            _currentMenu[player] = string.Empty;
-        });
-    }
-
-    private static void OnTick()
-    {
-        Parallel.ForEach(_currentMenu, kvp =>
-        {
-            var player = kvp.Key;
-
-            if (!player.IsValid)
-            {
-                _menus.TryRemove(player, out _);
-                _currentMenu.TryRemove(player, out _);
-                return;
-            }
-
-            var menuString = kvp.Value;
-
-            if (menuString != string.Empty)
-                player.PrintToCenterHtml(menuString);
+            _currentMenuHtml[player] = string.Empty;
         });
     }
 }

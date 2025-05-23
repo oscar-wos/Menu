@@ -1,4 +1,5 @@
-﻿using RMenu.Enums;
+﻿using CounterStrikeSharp.API;
+using RMenu.Enums;
 
 namespace RMenu;
 
@@ -14,14 +15,14 @@ public class MenuInput<T> where T : struct, Enum
         {
             _values[Convert.ToUInt16(button)] = button switch
             {
-                MenuButton.Up => 1UL << 3,
-                MenuButton.Down => 1UL << 4,
-                MenuButton.Left => 1UL << 9,
-                MenuButton.Right => 1UL << 10,
-                MenuButton.Select => 1UL << 5,
-                MenuButton.Back => 1UL << 17,
-                MenuButton.Exit => 1UL << 33,
-                MenuButton.Assist => 1UL << 13,
+                MenuButton.Up => (ulong)PlayerButtons.Forward,
+                MenuButton.Down => (ulong)PlayerButtons.Back,
+                MenuButton.Left => (ulong)PlayerButtons.Moveleft,
+                MenuButton.Right => (ulong)PlayerButtons.Moveright,
+                MenuButton.Select => (ulong)PlayerButtons.Jump,
+                MenuButton.Back => (ulong)PlayerButtons.Walk,
+                MenuButton.Exit => (ulong)PlayerButtons.Scoreboard,
+                MenuButton.Assist => (ulong)PlayerButtons.Inspect,
                 _ => 0
             };
         }
