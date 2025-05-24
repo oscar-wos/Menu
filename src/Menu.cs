@@ -8,12 +8,12 @@ namespace RMenu;
 
 public static partial class Menu
 {
-    private static readonly ConcurrentDictionary<CCSPlayerController, List<Stack<MenuBase>>> _menus = [];
-    private static readonly ConcurrentDictionary<CCSPlayerController, string> _currentMenuHtml = [];
+    private static readonly Dictionary<CCSPlayerController, List<Stack<MenuBase>>> _menus = [];
+    private static readonly Dictionary<CCSPlayerController, (MenuBase, string)> _currentMenu = [];
     private static readonly MemoryFunctionVoid<CPlayer_MovementServices, IntPtr> _runCommand = new("40 53 56 57 48 81 EC 80 00 00 00 0F");
     private static readonly MemoryFunctionVoid<CPlayer_ObserverServices, int> _changeSpecMode = new("48 89 74 24 18 55 41 56 41 57 48 8D AC");
     private static readonly Timer _menuTimer = new(ProcessMenu, null, 0, 100);
-    public static event EventHandler<MenuEvent>? OnDrawMenu;
+    public static event EventHandler<MenuEvent>? OnPrintMenuPre;
 
     static Menu()
     {
@@ -24,25 +24,20 @@ public static partial class Menu
 
     private static void OnTick()
     {
-        Parallel.ForEach(_currentMenuHtml, kvp =>
+        foreach (var (player, (menu, menuString)) in _currentMenu)
         {
-            var player = kvp.Key;
-
-            if (!player.IsValid)
+            if (player.Connected != PlayerConnectedState.PlayerConnected)
             {
                 _menus.Remove(player, out _);
-                _currentMenuHtml.Remove(player, out _);
-                return;
+                _currentMenu.Remove(player, out _);
+                continue;
             }
 
-            var menuString = kvp.Value;
+            var menuEvent = new MenuEvent(player, menu, menuString);
 
-            if (menuString == string.Empty)
-                return;
-
+            OnPrintMenuPre?.Invoke(null, menuEvent);
             player.PrintToCenterHtml(menuString);
-            OnDrawMenu?.Invoke(null, new MenuEvent(player, Get(player)));
-        });
+        }
     }
 
     private unsafe static HookResult RunCommand(DynamicHook h)
@@ -66,7 +61,7 @@ public static partial class Menu
             userCmd->BaseUserCmd->m_flUpMove = 0;
         }
 
-        var buttons = (ulong)userCmd->ButtonState->PressedButtons;
+        var buttons = (ulong)userCmd->ButtonState.PressedButtons | (ulong)userCmd->ButtonState.ScrollButtons;
 
         foreach (MenuButton button in Enum.GetValues(typeof(MenuButton)))
         {
@@ -75,8 +70,10 @@ public static partial class Menu
                 if (menu.InputDelay[(int)button] + menu.Options.ButtonsDelay > Environment.TickCount64)
                     continue;
 
+                Console.WriteLine(buttons);
+
                 menu.InputDelay[(int)button] = Environment.TickCount64;
-                menu.Input(button);
+                menu.Input(player, button);
             }
         }
 
@@ -95,7 +92,7 @@ public static partial class Menu
         if (menu == null || !menu.Options.ProcessInput)
             return HookResult.Continue;
 
-        menu.Input(MenuButton.Select);
+        menu.Input(player, MenuButton.Select);
         return HookResult.Stop;
     }
 
@@ -108,7 +105,13 @@ public static partial class Menu
             if (!player.IsValid)
                 return;
 
-            _currentMenuHtml[player] = string.Empty;
+            var menu = Get(player);
+
+            if (menu == null)
+                return;
+
+            var html = $"\u00A0{menu.Title}";
+            _currentMenu[player] = (menu, html);
         });
     }
 }

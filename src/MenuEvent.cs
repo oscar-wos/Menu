@@ -2,8 +2,14 @@
 
 namespace RMenu;
 
-public class MenuEvent(CCSPlayerController player, MenuBase? menu)
+public class MenuEvent(CCSPlayerController player, MenuBase menu, string menuString)
 {
     public CCSPlayerController Player { get; } = player;
-    public MenuBase? Menu { get; } = menu;
+    public MenuBase Menu { get; } = menu;
+    public string String { get; } = menuString;
+
+    public override string ToString()
+    {
+        return String;
+    }
 }

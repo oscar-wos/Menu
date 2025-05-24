@@ -9,7 +9,7 @@ public unsafe struct CUserCmd
     public CBaseUserCmdPb* BaseUserCmd;
 
     [FieldOffset(0x58)]
-    public CInButtonState* ButtonState;
+    public CInButtonState ButtonState;
 }
 
 [StructLayout(LayoutKind.Explicit)]

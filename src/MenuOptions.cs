@@ -5,14 +5,18 @@ namespace RMenu;
 
 public class MenuOptions
 {
+    public MenuFontSize TitleFontSize { get; set; } = MenuFontSize.M;
+    public MenuFontSize ItemFontSize { get; set; } = MenuFontSize.Sm;
+    public MenuInput<MenuButton> Buttons { get; set; } = new();
+    public bool BlockMovement { get; set; } = false;
+    public bool ProcessInput { get; set; } = true;
+    public int ButtonsDelay { get; set; } = 200;
+
+    //TODO
+    public bool Exitable { get; set; } = true;
+    public bool BlockJump { get; set; } = false;
     public int Priority { get; set; } = 0;
     public int Timeout { get; set; } = 0;
-    public bool ProcessInput { get; set; } = true;
-    public bool Exitable { get; set; } = true;
-    public bool BlockMovement { get; set; } = false;
-    public bool BlockJump { get; set; } = false;
-    public int ButtonsDelay { get; set; } = 100;
-    public MenuInput<MenuButton> Buttons { get; set; } = new();
 
     public MenuValue[] Cursor =
     [

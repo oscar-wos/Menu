@@ -35,6 +35,13 @@ public class MenuItem
         Options = options ?? new MenuItemOptions();
     }
 
+    public MenuItem(MenuItemType type, List<MenuItem> values, MenuItemOptions? options = null)
+    {
+        Type = type;
+        Values = values;
+        Options = options ?? new MenuItemOptions();
+    }
+
     public MenuItem(MenuItemType type, MenuValue head, MenuItemOptions? options = null)
     {
         Type = type;

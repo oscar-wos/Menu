@@ -41,6 +41,6 @@ public class MenuValue
 
     public override string ToString()
     {
-        return $"<font color=\"{Color.R:X2}{Color.G:X2}{Color.B:X2}\">{Value}<font color=\"#FFFFFF\">";
+        return $"<font color=\"#{Color.R:X2}{Color.G:X2}{Color.B:X2}\">{Value}<font color=\"#FFFFFF\">";
     }
 }
