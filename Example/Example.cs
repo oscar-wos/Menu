@@ -1,6 +1,8 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using RMenu;
+using RMenu.Enums;
+using RMenu.Extensions;
 using System.Drawing;
 
 namespace Example;
@@ -23,7 +25,7 @@ public class Example : BasePlugin
 
     private void OnPrintMenuPre(object? sender, MenuEvent e)
     {
-        Console.WriteLine(e);
+        //Console.WriteLine(e);
     }
 
     private void CommandTest(CCSPlayerController? player, CommandInfo info)
@@ -31,9 +33,52 @@ public class Example : BasePlugin
         if (player == null || !player.IsValid)
             return;
 
-        Menu.Add(player, new MenuBase(new MenuValue("new menu", Color.Red)), (player, menu, menuAction, item) =>
+        var options = new MenuOptions()
         {
+            BlockMovement = true,
+            DisplayItemsInHeader = true
+        };
 
+        var customHeader = new List<MenuValue>
+        {
+            new("wow", new Color().Rainbow()),
+            "new menu",
+        };
+
+        //var newMenu = new MenuBase("simple header");
+        var newMenu = new MenuBase(customHeader, options: options);
+        newMenu.AddItem(new(MenuItemType.Button, "button"));
+        newMenu.AddItem(new(MenuItemType.Button, new("button2", new Color().Rainbow(), data: "object?", (player, menuAction, menuValue) =>
+        {
+            if (menuAction == MenuAction.Select)
+                Console.WriteLine($"Selected, data: {menuValue.Data}");
+        })));
+        newMenu.AddItem(new(MenuItemType.Button, new("button3 strobe fast", new Color().RainbowStrobe(254))));
+        newMenu.AddItem(new(MenuItemType.Button, new("button4 strobe slow", new Color().RainbowStrobe(30))));
+        newMenu.AddItem(new(MenuItemType.Button, new("button6", Color.Green)));
+
+        //newMenu.AddItem(new(MenuItemType.Spacer, "lol"));
+        newMenu.AddItem(new(MenuItemType.Button, new("green", Color.Green)));
+        newMenu.AddItem(new(MenuItemType.Button, new("red", Color.Red)));
+        newMenu.AddItem(new(MenuItemType.Button, "blank"));
+        newMenu.AddItem(new(MenuItemType.Button, new("blue", Color.Blue)));
+
+        newMenu.AddItem(new(MenuItemType.Button, new("full text", new Color().Rainbow())));
+        newMenu.AddItem(new(MenuItemType.Button, new("strobe fast", new Color().RainbowStrobe(254))));
+        newMenu.AddItem(new(MenuItemType.Button, new("strobe medium", new Color().RainbowStrobe(128))));
+        newMenu.AddItem(new(MenuItemType.Button, new("strobe slow", new Color().RainbowStrobe(30))));
+        //newMenu.AddItem(new(MenuItemType.Spacer));
+
+        for (var i = 0; i < 25; i++)
+            newMenu.AddItem(new(MenuItemType.Button, $"button {i}"));
+
+        //newMenu.AddItem(new(MenuItemType.Spacer));
+        //newMenu.AddItem(new(MenuItemType.Text, "text"));
+        //newMenu.AddItem(new(MenuItemType.Text, "text"));
+
+        Menu.Add(player, newMenu, (player, menu, menuAction, item) =>
+        {
+            Console.WriteLine(menuAction);
         });
     }
 }

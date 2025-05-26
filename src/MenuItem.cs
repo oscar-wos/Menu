@@ -2,56 +2,13 @@
 
 namespace RMenu;
 
-public class MenuItem
+public class MenuItem(MenuItemType type, MenuValue? head = null, List<MenuValue>? values = null, MenuValue? tail = null, MenuItemOptions? options = null)
 {
-    public MenuItemType Type { get; init; }
-    public MenuValue? Head { get; set; }
-    public MenuValue? Tail { get; set; }
-    public List<MenuItem>? Values { get; set; }
-    public MenuItemOptions Options { get; set; }
-
-    public MenuItem(MenuItemType type, MenuValue head, List<MenuItem> values, MenuValue tail, MenuItemOptions? options = null)
-    {
-        Type = type;
-        Head = head;
-        Values = values;
-        Tail = tail;
-        Options = options ?? new MenuItemOptions();
-    }
-
-    public MenuItem(MenuItemType type, MenuValue head, List<MenuItem> values, MenuItemOptions? options = null)
-    {
-        Type = type;
-        Head = head;
-        Values = values;
-        Options = options ?? new MenuItemOptions();
-    }
-
-    public MenuItem(MenuItemType type, List<MenuItem> values, MenuValue tail, MenuItemOptions? options = null)
-    {
-        Type = type;
-        Values = values;
-        Tail = tail;
-        Options = options ?? new MenuItemOptions();
-    }
-
-    public MenuItem(MenuItemType type, List<MenuItem> values, MenuItemOptions? options = null)
-    {
-        Type = type;
-        Values = values;
-        Options = options ?? new MenuItemOptions();
-    }
-
-    public MenuItem(MenuItemType type, MenuValue head, MenuItemOptions? options = null)
-    {
-        Type = type;
-        Head = head;
-        Options = options ?? new MenuItemOptions();
-    }
-
-    public MenuItem(MenuItemType type, MenuItemOptions? options = null)
-    {
-        Type = type;
-        Options = options ?? new MenuItemOptions();
-    }
+    public MenuItemOptions Options { get; set; } = options ?? new MenuItemOptions();
+    public MenuItemType Type { get; set; } = type;
+    public MenuValue? Head { get; set; } = head;
+    public MenuValue? Tail { get; set; } = tail;
+    public object? Data { get; set; } = null;
+    public List<MenuValue>? Values { get; set; } = values;
+    public (int Index, MenuValue MenuValue)? SelectedValue { get; set; } = null;
 }

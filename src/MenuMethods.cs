@@ -7,21 +7,25 @@ public static partial class Menu
 {
     public static void Add(CCSPlayerController player, MenuBase menu, Action<CCSPlayerController, MenuBase, MenuAction, MenuItem?> callback)
     {
-        if (!_menus.TryGetValue(player, out _))
-            _menus[player] = [];
-
-        if (_menus[player].Count == 0)
-            _menus[player].Add(new Stack<MenuBase>());
-
         menu.Callback = callback;
-        var menuStack = _menus[player].ElementAt(0);
-        menuStack.Push(menu);
+
+        for (int i = 0; i < menu.Items.Count; i++)
+        {
+            if (MenuBase.IsSelectable(menu.Items[i]))
+            {
+                menu.SelectedItem = (i, menu.Items[i]);
+                break;
+            }
+        }
+
+        if (!_menus.TryAdd(player, [new([menu])]))
+        {
+            // Priorities
+        }
     }
 
     public static void Clear(CCSPlayerController player)
     {
-        Console.WriteLine("Cleared");
-
         _menus.Remove(player, out _);
         _currentMenu.Remove(player, out _);
     }

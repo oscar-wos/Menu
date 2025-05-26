@@ -1,12 +1,16 @@
 ﻿namespace RMenu.Enums;
 
+
+//168 width
 public enum MenuFontSize
 {
-    Xs = 8,
+    XS = 8,
     S = 12,
-    Sm = 16,
+    SM = 16,
     M = 18,
+    ML = 20,
     L = 24,
-    Xl = 32,
-    Xxl = 40
+    XL = 32,
+    XXL = 40,
+    XXXL = 64
 }

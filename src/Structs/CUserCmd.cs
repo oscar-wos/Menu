@@ -16,13 +16,13 @@ public unsafe struct CUserCmd
 public unsafe struct CInButtonState
 {
     [FieldOffset(0x8)]
-    public long PressedButtons;
+    public ulong PressedButtons;
 
     [FieldOffset(0x10)]
-    public long ChangedButtons;
+    public ulong ChangedButtons;
 
     [FieldOffset(0x18)]
-    public long ScrollButtons;
+    public ulong ScrollButtons;
 }
 
 [StructLayout(LayoutKind.Explicit)]
