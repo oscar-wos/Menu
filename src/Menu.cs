@@ -1,10 +1,11 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
+using CounterStrikeSharp.API.Modules.UserMessages;
 using RMenu.Enums;
 using RMenu.Models;
 using RMenu.Structs;
 using System.Collections.Concurrent;
-using System.Drawing;
 
 namespace RMenu;
 
@@ -21,8 +22,34 @@ public static partial class Menu
     static Menu()
     {
         NativeAPI.AddListener("OnTick", FunctionReference.Create(OnTick));
+        NativeAPI.HookUsermessage(118, (InputArgument)FunctionReference.Create(OnSay), HookMode.Pre);
         _runCommand.Hook(RunCommand, HookMode.Pre);
         _changeSpecMode.Hook(ChangeSpecMode, HookMode.Pre);
+    }
+
+    private static HookResult OnSay(UserMessage um)
+    {
+        var index = um.ReadInt("entityindex");
+        var message = um.ReadString("param2");
+        var player = Utilities.GetPlayerFromIndex(index);
+
+        if (player is null || !player.IsValid)
+            return HookResult.Continue;
+
+        var menu = Get(player);
+
+        if (menu is null || !menu.Text)
+            return HookResult.Continue;
+
+        var item = menu.SelectedItem?.Item;
+        var value = item?.SelectedValue?.Value;
+
+        if (value is null)
+            return HookResult.Continue;
+
+        value.Data = message;
+        menu.Text = false;
+        return HookResult.Continue;
     }
 
     private static void OnTick()
@@ -139,15 +166,18 @@ public static partial class Menu
                     continue;
                 }  
 
-                if (item == menu.SelectedItem?.MenuItem)
+                if (item == menu.SelectedItem?.Item)
                     html += menu.Options.Cursor[0];
+
+                if (item.Type == MenuItemType.Button && (item.Values is null || item.Values.Count == 0))
+                    html += FormatSelector(menu, item, 0);
 
                 if (item.Head is not null)
                     html += item.Head;
 
                 switch (item.Type)
                 {
-                    case MenuItemType.Button:
+                    case MenuItemType.Button or MenuItemType.Choice or MenuItemType.ChoiceBool:
                         html += FormatValues(menu, item);
                         break;
                 }
@@ -155,7 +185,10 @@ public static partial class Menu
                 if (item.Tail is not null)
                     html += item.Tail;
 
-                if (item == menu.SelectedItem?.MenuItem)
+                if (item.Type == MenuItemType.Button && (item.Values is null || item.Values.Count == 0))
+                    html += FormatSelector(menu, item, 1);
+
+                if (item == menu.SelectedItem?.Item)
                     html += menu.Options.Cursor[1];
 
                 if (i < menu.Items.Count - 1 || menu.Footer is not null)
@@ -174,42 +207,53 @@ public static partial class Menu
         });
     }
 
-    private static string FormatValues(MenuBase menu, MenuItem menuItem)
+    private static string FormatValues(MenuBase menu, MenuItem item)
     {
-        if (menuItem.Values is null || menuItem.Values.Count == 0)
+        if (item.Values is null || item.Values.Count == 0)
             return "";
 
-        var currentIndex = menuItem.SelectedValue?.Index ?? 0;
+        var currentIndex = item.SelectedValue?.Index ?? 0;
         var html = "";
 
-        if (menuItem.Options.Pinwheel)
+        if (item.Options.Pinwheel)
         {
-            int prevIndex = (currentIndex == 0) ? menuItem.Values.Count - 1 : currentIndex - 1;
-            int nextIndex = (currentIndex == menuItem.Values.Count - 1) ? 0 : currentIndex + 1;
+            int prevIndex = (currentIndex == 0) ? item.Values.Count - 1 : currentIndex - 1;
+            int nextIndex = (currentIndex == item.Values.Count - 1) ? 0 : currentIndex + 1;
 
-            html += $"{menuItem.Values[prevIndex]} ";
-            html += $"{menu.Options.Selector[0]}{menuItem.Values[currentIndex]}{menu.Options.Selector[1]}";
-            html += $" {menuItem.Values[nextIndex]}";
+            html += $"{item.Values[prevIndex]} ";
+            html += $"{FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)}";
+            html += $" {item.Values[nextIndex]}";
             return html;
         }
         
         if (currentIndex == 0)
         {
-            html += $"{menu.Options.Selector[0]}{menuItem.Values[currentIndex]}{menu.Options.Selector[1]}";
+            html += $"{FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)}";
 
-            for (var i = 0; i < 2 && i < menuItem.Values.Count - 1; i++)
-                html += $" {menuItem.Values[i + 1]}";
+            for (var i = 0; i < 2 && i < item.Values.Count - 1; i++)
+                html += $" {item.Values[i + 1]}";
         }
-        else if (currentIndex == menuItem.Values.Count - 1)
+        else if (currentIndex == item.Values.Count - 1)
         {
-            for (var i = menuItem.Values.Count - 3; i < menuItem.Values.Count - 1; i++)
-                html += $"{menuItem.Values[i]} ";
+            for (int i = 2; i > 0; i--)
+            {
+                if (currentIndex - i >= 0)
+                    html += $"{item.Values[currentIndex - i]} ";
+            }
 
-            html += $"{menu.Options.Selector[0]}{menuItem.Values[currentIndex]}{menu.Options.Selector[1]}";
+            html += $"{FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)}";
         }
         else
-            html += $"{menuItem.Values[currentIndex - 1]} {menu.Options.Selector[0]}{menuItem.Values[currentIndex]}{menu.Options.Selector[1]} {menuItem.Values[currentIndex + 1]}";
+            html += $"{item.Values[currentIndex - 1]} {FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)} {item.Values[currentIndex + 1]}";
 
         return html;
+    }
+
+    private static string FormatSelector(MenuBase menu, MenuItem item, int index)
+    {
+        if (item.Type is (MenuItemType.Button or MenuItemType.ChoiceBool) && item != menu.SelectedItem?.Item)
+            return "";
+
+        return menu.Options.Selector[index].ToString();
     }
 }

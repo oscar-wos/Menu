@@ -10,7 +10,7 @@ public class MenuItem(MenuItemType type, MenuValue? head = null, List<MenuValue>
     public MenuValue? Tail { get; set; } = tail;
     public object? Data { get; set; } = null;
     public List<MenuValue>? Values { get; set; } = values;
-    public (int Index, MenuValue MenuValue)? SelectedValue { get; set; } = null;
+    public (int Index, MenuValue Value)? SelectedValue { get; set; } = null;
 
     public bool Input(MenuButton button)
     {
@@ -20,23 +20,26 @@ public class MenuItem(MenuItemType type, MenuValue? head = null, List<MenuValue>
         SelectedValue ??= (0, Values[0]);
         int newIndex = SelectedValue.Value.Index;
 
-        switch (button)
+        if (Type is (MenuItemType.Button or MenuItemType.Choice or MenuItemType.ChoiceBool))
         {
-            case MenuButton.Left:
-                if (Options.Pinwheel)
-                    newIndex = (newIndex - 1 + Values.Count) % Values.Count;
-                else if (newIndex > 0)
-                    newIndex--;
+            switch (button)
+            {
+                case MenuButton.Left:
+                    if (Options.Pinwheel)
+                        newIndex = (newIndex - 1 + Values.Count) % Values.Count;
+                    else if (newIndex > 0)
+                        newIndex--;
 
-                break;
+                    break;
 
-            case MenuButton.Right:
-                if (Options.Pinwheel)
-                    newIndex = (newIndex + 1) % Values.Count;
-                else if (newIndex < Values.Count - 1)
-                    newIndex++;
+                case MenuButton.Right:
+                    if (Options.Pinwheel)
+                        newIndex = (newIndex + 1) % Values.Count;
+                    else if (newIndex < Values.Count - 1)
+                        newIndex++;
 
-                break;
+                    break;
+            }
         }
 
         if (newIndex == SelectedValue.Value.Index)

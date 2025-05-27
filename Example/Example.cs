@@ -1,10 +1,10 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.UserMessages;
 using RMenu;
 using RMenu.Enums;
 using RMenu.Extensions;
 using System.Drawing;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Example;
 
@@ -55,14 +55,15 @@ public class Example : BasePlugin
 
         var newMenu = new MenuBase(header: customHeader, footer: ["footer: ", new("rasco", new Color().RainbowStrobeReversed(20))], options: options);
         newMenu.AddItem(new(MenuItemType.Button, head: "button: ", values: ["1", "2", "3", "4", "5"]));
-        newMenu.AddItem(new(MenuItemType.Button, head: "button2: ", values: [new("ak-47", Color.Red, data: true), new("m4a1", new Color().RainbowStrobe(), data: 2), "3", "4", new("5", data: player)], options: itemOptions));
+        newMenu.AddItem(new(MenuItemType.Choice, head: "choice: ", values: [new("ak-47", Color.Red, data: true), new("m4a1", new Color().RainbowStrobe(), data: 2), "3", "4", new("5", data: player)], options: itemOptions));
         newMenu.AddItem(new(MenuItemType.Spacer));
         newMenu.AddItem(new(MenuItemType.Button, new("button", new Color().Rainbow(), data: "object?", (player, menuAction, menuValue) =>
         {
             if (menuAction == MenuAction.Select)
                 Console.WriteLine($"Selected, data: {menuValue.Data}");
         })));
-        newMenu.AddItem(new(MenuItemType.Button, new("button3 strobe fast", new Color().RainbowStrobe(254))));
+        newMenu.AddItem(new(MenuItemType.Button, new("button2 strobe fast: ", new Color().RainbowStrobe(254)), ["1", "2"]));
+        newMenu.AddItem(new(MenuItemType.Button, values: ["1"], options: itemOptions));
         //newMenu.AddItem(new(MenuItemType.Button, new("button4 strobe fast reversed", new Color().RainbowStrobeReversed(254))));
         //newMenu.AddItem(new(MenuItemType.Button, new("button6 strobe slow reversed", new Color().RainbowStrobe(60))));
 
@@ -92,13 +93,13 @@ public class Example : BasePlugin
         void OnMenuAction(CCSPlayerController player, MenuBase menu, MenuAction action, MenuItem? item)
         {
             var itemRowIndex = menu.SelectedItem?.Index;
-            Console.WriteLine($"{itemRowIndex}{action} - {item?.SelectedValue?.MenuValue.Data}");
+            Console.WriteLine($"{itemRowIndex}{action} - {item?.SelectedValue?.Value.Data}");
 
             if (itemRowIndex == 1)
             {
-                if (item?.SelectedValue?.MenuValue.Data is CCSPlayerController dataPlayer)
+                if (item?.SelectedValue?.Value.Data is CCSPlayerController dataPlayer)
                 {
-                    menu.Items[2].Type = MenuItemType.Button;
+                    menu.Items[2].Type = MenuItemType.Choice;
                     menu.Items[2].Values = [new("case", Color.Blue, data: "", callback: OnCaseHarden), "test", "stock"];
                 }
                 else

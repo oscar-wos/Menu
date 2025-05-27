@@ -11,7 +11,8 @@ public class MenuBase
     public List<MenuValue>? Footer { get; set; }
     public Action<CCSPlayerController, MenuBase, MenuAction, MenuItem?>? Callback { get; set; }
     public List<MenuItem> Items { get; set; } = [];
-    public (int Index, MenuItem MenuItem)? SelectedItem { get; set; } = null;
+    public (int Index, MenuItem Item)? SelectedItem { get; set; } = null;
+    public bool Text { get; set; } = false;
 
     public MenuBase(MenuValue? header = null, MenuValue? footer = null, MenuOptions? options = null)
     {
@@ -49,44 +50,50 @@ public class MenuBase
     {
         switch (button)
         {
-            case MenuButton.Up:
+            case MenuButton.Up when !Text:
                 if (!HasSelectedItem())
                     return;
 
                 for (int newIndex = SelectedItem!.Value.Index - 1; newIndex >= 0; newIndex--)
                 {
                     if (SelectItem(newIndex))
+                    {
+                        Callback?.Invoke(player, this, MenuAction.Update, SelectedItem.Value.Item);
                         break;
+                    }
                 }
 
                 break;
 
-            case MenuButton.Down:
+            case MenuButton.Down when !Text:
                 if (!HasSelectedItem())
                     return;
 
                 for (int newIndex = SelectedItem!.Value.Index + 1; newIndex < Items.Count; newIndex++)
                 {
                     if (SelectItem(newIndex))
+                    {
+                        Callback?.Invoke(player, this, MenuAction.Update, SelectedItem.Value.Item);
                         break;
+                    }
                 }
 
                 break;
 
-            case MenuButton.Left or MenuButton.Right:
+            case MenuButton.Left or MenuButton.Right when !Text:
                 if (!HasSelectedItem())
                     return;
 
-                if (SelectedItem!.Value.MenuItem.Input(button))
-                    Callback?.Invoke(player, this, MenuAction.Update, SelectedItem.Value.MenuItem);
+                if (SelectedItem!.Value.Item.Input(button))
+                    Callback?.Invoke(player, this, MenuAction.Update, SelectedItem.Value.Item);
 
                 break;
 
-            case MenuButton.Select:
+            case MenuButton.Select when !Text:
                 if (!HasSelectedItem())
                     return;
 
-                Callback?.Invoke(player, this, MenuAction.Select, SelectedItem!.Value.MenuItem);
+                Callback?.Invoke(player, this, MenuAction.Select, SelectedItem!.Value.Item);
                 break;
 
             case MenuButton.Exit:
