@@ -10,7 +10,7 @@ namespace RMenu;
 
 public static partial class Menu
 {
-    private const uint MENU_HEIGHT = 168;
+    private const int MENU_HEIGHT = 168;
     private static readonly ConcurrentDictionary<CCSPlayerController, List<Stack<MenuBase>>> _menus = [];
     private static readonly Dictionary<CCSPlayerController, (MenuBase, string)> _currentMenu = [];
     private static readonly MemoryFunctionVoid<CPlayer_MovementServices, IntPtr> _runCommand = new("40 53 56 57 48 81 EC 80 00 00 00 0F");
@@ -120,36 +120,24 @@ public static partial class Menu
                 foreach (var header in menu.Header)
                     html += header;
 
-                html += menu.Options.ItemSizeHtml();
-
                 if (menu.Options.DisplayItemsInHeader && menu.SelectedItem is not null)
-                    html += $" {menu.SelectedItem.Value.Index + 1}/{menu.Items.Count}";
+                    html += $"</font>{menu.Options.FooterSizeHtml()} {menu.SelectedItem.Value.Index + 1}/{menu.Items.Count}";
 
-                html += menu.Items.Count == 0 && menu.Footer is null ? "" : "<br>";
+                html += menu.Items.Count == 0 && menu.Footer is null ? "" : $"<br>";
             }
-            else
-                html += menu.Options.ItemSizeHtml();
 
-            /*
-            if (menu.Title != null)
-            {
-                html += $"{menu.Options.TitleSizeHtml()}{menu.Title}{menu.Options.ItemSizeHtml()} ";
-
-                if (menu.Options.DisplayItemsInTitle && menu.SelectedItem is not null)
-                    html += $"{menu.SelectedItem.Value.Index + 1}/{menu.Items.Count}";
-
-                html += menu.Items.Count == 0 ? "" : "<br>";
-            }
-            else
-                html += menu.Options.ItemSizeHtml();
-            */
+            if (menu.Items.Count > 0)
+                html += $"</font>{menu.Options.ItemSizeHtml()}";
 
             for (var i = 0; i < menu.Items.Count; i++)
             {
                 var item = menu.Items[i];
 
                 if (item.Type == MenuItemType.Spacer)
+                {
+                    html += "<br>";
                     continue;
+                }  
 
                 if (item == menu.SelectedItem?.MenuItem)
                     html += menu.Options.Cursor[0];
@@ -157,7 +145,12 @@ public static partial class Menu
                 if (item.Head is not null)
                     html += item.Head;
 
-                //MenuItemType
+                switch (item.Type)
+                {
+                    case MenuItemType.Button:
+                        html += FormatValues(menu, item);
+                        break;
+                }
 
                 if (item.Tail is not null)
                     html += item.Tail;
@@ -165,10 +158,58 @@ public static partial class Menu
                 if (item == menu.SelectedItem?.MenuItem)
                     html += menu.Options.Cursor[1];
 
-                html += "<br>";
+                if (i < menu.Items.Count - 1 || menu.Footer is not null)
+                    html += "<br>";
+            }
+
+            if (menu.Footer is not null)
+            {
+                html += $"</font>{menu.Options.FooterSizeHtml()}";
+
+                foreach (var footer in menu.Footer)
+                    html += footer;
             }
 
             _currentMenu[player] = (menu, html);
         });
+    }
+
+    private static string FormatValues(MenuBase menu, MenuItem menuItem)
+    {
+        if (menuItem.Values is null || menuItem.Values.Count == 0)
+            return "";
+
+        var currentIndex = menuItem.SelectedValue?.Index ?? 0;
+        var html = "";
+
+        if (menuItem.Options.Pinwheel)
+        {
+            int prevIndex = (currentIndex == 0) ? menuItem.Values.Count - 1 : currentIndex - 1;
+            int nextIndex = (currentIndex == menuItem.Values.Count - 1) ? 0 : currentIndex + 1;
+
+            html += $"{menuItem.Values[prevIndex]} ";
+            html += $"{menu.Options.Selector[0]}{menuItem.Values[currentIndex]}{menu.Options.Selector[1]}";
+            html += $" {menuItem.Values[nextIndex]}";
+            return html;
+        }
+        
+        if (currentIndex == 0)
+        {
+            html += $"{menu.Options.Selector[0]}{menuItem.Values[currentIndex]}{menu.Options.Selector[1]}";
+
+            for (var i = 0; i < 2 && i < menuItem.Values.Count - 1; i++)
+                html += $" {menuItem.Values[i + 1]}";
+        }
+        else if (currentIndex == menuItem.Values.Count - 1)
+        {
+            for (var i = menuItem.Values.Count - 3; i < menuItem.Values.Count - 1; i++)
+                html += $"{menuItem.Values[i]} ";
+
+            html += $"{menu.Options.Selector[0]}{menuItem.Values[currentIndex]}{menu.Options.Selector[1]}";
+        }
+        else
+            html += $"{menuItem.Values[currentIndex - 1]} {menu.Options.Selector[0]}{menuItem.Values[currentIndex]}{menu.Options.Selector[1]} {menuItem.Values[currentIndex + 1]}";
+
+        return html;
     }
 }

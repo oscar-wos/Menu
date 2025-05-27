@@ -17,15 +17,19 @@ public class MenuValue(string value, Color? color = null, object? data = null, A
     public override string ToString()
     {
         var usedColor = Color;
+        int rgb = (usedColor.R << 16) | (usedColor.G << 8) | usedColor.B;
 
-        if (usedColor.R == 0 && usedColor.G == 0 && usedColor.B == 0)
+        if (rgb == 0x010000)
+            return Rainbow.ApplyStrobeEffect(Value, usedColor.A, true);
+
+        if (rgb == 0x000000)
         {
             if (usedColor.A != 0)
-                return Rainbow.Strobe(Value, usedColor.A);
+                return Rainbow.ApplyStrobeEffect(Value, usedColor.A, false);
 
-            usedColor = Rainbow.Color;
+            usedColor = Rainbow.CurrentColor;
         }
 
-        return $"<font color=\"#{usedColor.R:X2}{usedColor.G:X2}{usedColor.B:X2}\">{Value}";
+        return $"<font color=\"#{usedColor.R:X2}{usedColor.G:X2}{usedColor.B:X2}\">{Value}</font>";
     }
 }

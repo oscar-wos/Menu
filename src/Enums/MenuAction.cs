@@ -4,7 +4,7 @@ public enum MenuAction
 {
     Start,
     Select,
-    Choose,
+    Update,
     Input,
     Cancel,
     Assist

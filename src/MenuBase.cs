@@ -20,11 +20,16 @@ public class MenuBase
         Options = options ?? new MenuOptions();
     }
 
-    public MenuBase(IEnumerable<MenuValue>? headers = null, IEnumerable<MenuValue>? footers = null, MenuOptions? options = null)
+    public MenuBase(IEnumerable<MenuValue>? header = null, IEnumerable<MenuValue>? footer = null, MenuOptions? options = null)
     {
-        Header = headers?.ToList();
-        Footer = footers?.ToList();
+        Header = header?.ToList();
+        Footer = footer?.ToList();
         Options = options ?? new MenuOptions();
+    }
+
+    public MenuBase()
+    {
+        Options = new MenuOptions();
     }
 
     public static bool IsSelectable(MenuItem item)
@@ -38,7 +43,6 @@ public class MenuBase
     }
 
     private bool HasSelectedItem() => SelectedItem.HasValue && SelectedItem.Value.Index >= 0 && SelectedItem.Value.Index < Items.Count;
-
     private bool SelectItem(int index) => IsSelectable(Items[index]) && (SelectedItem = (index, Items[index])) != null;
 
     public void Input(CCSPlayerController player, MenuButton button)
@@ -69,10 +73,25 @@ public class MenuBase
 
                 break;
 
+            case MenuButton.Left or MenuButton.Right:
+                if (!HasSelectedItem())
+                    return;
+
+                if (SelectedItem!.Value.MenuItem.Input(button))
+                    Callback?.Invoke(player, this, MenuAction.Update, SelectedItem.Value.MenuItem);
+
+                break;
+
+            case MenuButton.Select:
+                if (!HasSelectedItem())
+                    return;
+
+                Callback?.Invoke(player, this, MenuAction.Select, SelectedItem!.Value.MenuItem);
+                break;
+
             case MenuButton.Exit:
                 Callback?.Invoke(player, this, MenuAction.Cancel, null);
                 Menu.Clear(player);
-
                 break;
         }
 

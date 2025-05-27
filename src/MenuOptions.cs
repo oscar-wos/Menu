@@ -1,4 +1,5 @@
 ﻿using RMenu.Enums;
+using RMenu.Extensions;
 using System.Drawing;
 
 namespace RMenu;
@@ -6,33 +7,23 @@ namespace RMenu;
 public class MenuOptions
 {
     private MenuFontSize _headerFontSize = MenuFontSize.L;
-    private MenuFontSize _footerFontSize = MenuFontSize.S;
     private MenuFontSize _itemFontSize = MenuFontSize.SM;
+    private MenuFontSize _footerFontSize = MenuFontSize.S;
     private string _headerString = string.Empty;
-    private string _footerString = string.Empty;
     private string _itemString = string.Empty;
+    private string _footerString = string.Empty;
 
     public MenuOptions()
     {
         UpdateHtml();
     }
 
-    public MenuFontSize TitleFontSize
+    public MenuFontSize HeaderFontSize
     {
         get => _headerFontSize;
         set
         {
             _headerFontSize = value;
-            UpdateHtml();
-        }
-    }
-
-    public MenuFontSize FooterFontSize
-    {
-        get => _footerFontSize;
-        set
-        {
-            _footerFontSize = value;
             UpdateHtml();
         }
     }
@@ -43,6 +34,16 @@ public class MenuOptions
         set
         {
             _itemFontSize = value;
+            UpdateHtml();
+        }
+    }
+
+    public MenuFontSize FooterFontSize
+    {
+        get => _footerFontSize;
+        set
+        {
+            _footerFontSize = value;
             UpdateHtml();
         }
     }
@@ -59,26 +60,26 @@ public class MenuOptions
     public int Timeout { get; set; } = 0;
 
     public string HeaderSizeHtml() => _headerString;
-    public string FooterSizeHtml() => _footerString;
     public string ItemSizeHtml() => _itemString;
+    public string FooterSizeHtml() => _footerString;
 
     private void UpdateHtml()
     {
         _headerString = $"<font class=\"fontSize-{(_headerFontSize).ToString().ToLower()}\">";
-        _footerString = $"<font class=\"fontSize-{(_footerFontSize).ToString().ToLower()}\">";
         _itemString = $"<font class=\"fontSize-{(_itemFontSize).ToString().ToLower()}\">";
+        _footerString = $"<font class=\"fontSize-{(_footerFontSize).ToString().ToLower()}\">";
     } 
 
     public MenuValue[] Cursor =
     [
-        new("►", Color.FromArgb(0, 0, 0, 0)),
-        new("◄", Color.FromArgb(0, 0, 0, 0))
+        new("►", new Color().Rainbow()),
+        new("◄", new Color().Rainbow())
     ];
 
     public MenuValue[] Selector =
     [
-        new("[ ", Color.FromArgb(0, 0, 0, 0)),
-        new(" ]", Color.FromArgb(0, 0, 0, 0))
+        new("[ ", new Color().Rainbow()),
+        new(" ]", new Color().Rainbow())
     ];
 
     public MenuValue[] Bool =
