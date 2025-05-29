@@ -1,6 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.UserMessages;
 using RMenu;
 using RMenu.Enums;
 using RMenu.Extensions;
@@ -53,9 +52,21 @@ public class Example : BasePlugin
             Pinwheel = false
         };
 
+        var menuFontSizes = Enum.GetValues(typeof(MenuFontSize)).Cast<MenuFontSize>().Select(fontSize => new MenuValue(fontSize.ToString(), data: fontSize)).ToList();
+
         var newMenu = new MenuBase(header: customHeader, footer: ["footer: ", new("rasco", new Color().RainbowStrobeReversed(20))], options: options);
-        newMenu.AddItem(new(MenuItemType.Button, head: "button: ", values: ["1", "2", "3", "4", "5"]));
-        newMenu.AddItem(new(MenuItemType.Choice, head: "choice: ", values: [new("ak-47", Color.Red, data: true), new("m4a1", new Color().RainbowStrobe(), data: 2), "3", "4", new("5", data: player)], options: itemOptions));
+        newMenu.AddItem(new(MenuItemType.Choice, "h: ", values: menuFontSizes));
+        newMenu.Items[0].SelectedValue = (5, menuFontSizes[5]);
+
+        newMenu.AddItem(new(MenuItemType.Choice, "i: ", values: menuFontSizes));
+        newMenu.Items[1].SelectedValue = (2, menuFontSizes[2]);
+
+        newMenu.AddItem(new(MenuItemType.Choice, "f: ", values: menuFontSizes));
+        newMenu.Items[2].SelectedValue = (1, menuFontSizes[1]);
+        
+        newMenu.AddItem(new(MenuItemType.Choice, values: ["Dragonfire", "Acid Fade", "Turbo Peak", "Big Iron", new("Blood in the Water", new Color().RainbowStrobe())], options: itemOptions));
+        newMenu.AddItem(new(MenuItemType.Spacer));
+        newMenu.AddItem(new(MenuItemType.Choice, head: "choice: ", values: [new("ak-47", Color.Red, data: true), new("m4a1", new Color().RainbowStrobe(), data: 2), "3", "4", new("5", data: player)]));
         newMenu.AddItem(new(MenuItemType.Spacer));
         newMenu.AddItem(new(MenuItemType.Button, new("button", new Color().Rainbow(), data: "object?", (player, menuAction, menuValue) =>
         {
@@ -79,10 +90,9 @@ public class Example : BasePlugin
         newMenu.AddItem(new(MenuItemType.Button, new("strobe medium", new Color().RainbowStrobe(128))));
         newMenu.AddItem(new(MenuItemType.Button, new("strobe slow", new Color().RainbowStrobe(30))));
         //newMenu.AddItem(new(MenuItemType.Spacer));
-
-        for (var i = 0; i < 25; i++)
-            newMenu.AddItem(new(MenuItemType.Button, $"button {i}"));
         */
+        for (var i = 0; i < 3; i++)
+            newMenu.AddItem(new(MenuItemType.Button, $"button {i}"));
 
         //newMenu.AddItem(new(MenuItemType.Spacer));
         //newMenu.AddItem(new(MenuItemType.Text, "text"));
@@ -92,27 +102,23 @@ public class Example : BasePlugin
 
         void OnMenuAction(CCSPlayerController player, MenuBase menu, MenuAction action, MenuItem? item)
         {
-            var itemRowIndex = menu.SelectedItem?.Index;
-            Console.WriteLine($"{itemRowIndex}{action} - {item?.SelectedValue?.Value.Data}");
+            if (action != MenuAction.Update)
+                return;
 
-            if (itemRowIndex == 1)
+            switch (menu.SelectedItem?.Index)
             {
-                if (item?.SelectedValue?.Value.Data is CCSPlayerController dataPlayer)
-                {
-                    menu.Items[2].Type = MenuItemType.Choice;
-                    menu.Items[2].Values = [new("case", Color.Blue, data: "", callback: OnCaseHarden), "test", "stock"];
-                }
-                else
-                {
-                    menu.Items[2].Type = MenuItemType.Spacer;
-                    menu.Items[2].Values = null;
-                }
-            }
-        }
+                case 0:
+                    menu.Options.HeaderFontSize = (MenuFontSize)item?.SelectedValue?.Value.Data;
+                    break;
 
-        void OnCaseHarden(CCSPlayerController player, MenuAction action, MenuValue? value)
-        {
-            Console.WriteLine($"Case hardened selected by {player.PlayerName} with value: {value?.Data}");
+                case 1:
+                    menu.Options.ItemFontSize = (MenuFontSize)item?.SelectedValue?.Value.Data;
+                    break;
+
+                case 2:
+                    menu.Options.FooterFontSize = (MenuFontSize)item?.SelectedValue?.Value.Data;
+                    break;
+            }
         }
     }
 }

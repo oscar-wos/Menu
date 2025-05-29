@@ -1,9 +1,9 @@
 ﻿using System.Drawing;
 using System.Text;
 
-namespace RMenu.Models;
+namespace RMenu.Helpers;
 
-public static class Rainbow
+internal static class Rainbow
 {
     private const double HUE_INCREMENT = 3.233;
     private const int HUE_MAX = 360;
@@ -24,7 +24,7 @@ public static class Rainbow
 
     public static void UpdateRainbowHue()
     {
-        _currentHue = (_currentHue + HUE_INCREMENT) % HUE_MAX;
+        _currentHue = (_currentHue + HUE_INCREMENT + HUE_MAX) % HUE_MAX;
         _currentColor = GetColorFromHue(_currentHue);
     }
 
@@ -39,7 +39,7 @@ public static class Rainbow
         for (int i = 0; i < input.Length; i++)
         {
             var offset = hueDelta - i * step;
-            var hue = (_currentHue + offset) % HUE_MAX;
+            var hue = (_currentHue + offset + HUE_MAX) % HUE_MAX;
 
             var color = GetColorFromHue(hue);
             sb.Append($"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\">{input[i]}</font>");
@@ -73,7 +73,6 @@ public static class Rainbow
 
     private static Color GetColorFromHue(double hue)
     {
-        var index = ((int)Math.Round(hue)) % HUE_MAX;
-        return _hue[(index + HUE_MAX) % HUE_MAX];
+        return _hue[((int)hue + HUE_MAX) % HUE_MAX];
     }
 }

@@ -1,7 +1,5 @@
 ﻿namespace RMenu.Enums;
 
-
-//168 width
 public enum MenuFontSize
 {
     XS = 8,

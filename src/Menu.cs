@@ -1,125 +1,34 @@
-﻿using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
-using CounterStrikeSharp.API.Modules.UserMessages;
+﻿using CounterStrikeSharp.API.Core;
 using RMenu.Enums;
-using RMenu.Models;
-using RMenu.Structs;
+using RMenu.Helpers;
+using RMenu.Hooks;
+using RMenu.Listeners;
 using System.Collections.Concurrent;
 
 namespace RMenu;
 
 public static partial class Menu
 {
-    private const int MENU_HEIGHT = 168;
-    private static readonly ConcurrentDictionary<CCSPlayerController, List<Stack<MenuBase>>> _menus = [];
-    private static readonly Dictionary<CCSPlayerController, (MenuBase, string)> _currentMenu = [];
-    private static readonly MemoryFunctionVoid<CPlayer_MovementServices, IntPtr> _runCommand = new("40 53 56 57 48 81 EC 80 00 00 00 0F");
-    private static readonly MemoryFunctionVoid<CPlayer_ObserverServices, int> _changeSpecMode = new("48 89 74 24 18 55 41 56 41 57 48 8D AC");
+    internal const int MENU_HEIGHT = 140;
+    internal const int MENU_LENGTH = 300;
+    internal static readonly ConcurrentDictionary<CCSPlayerController, List<Stack<MenuBase>>> _menus = [];
+    internal static readonly Dictionary<CCSPlayerController, (MenuBase, string)> _currentMenu = [];
+    
     private static readonly Timer _menuTimer = new(ProcessMenu, null, 0, 100);
+    
     public static event EventHandler<MenuEvent>? OnPrintMenuPre;
 
     static Menu()
     {
-        NativeAPI.AddListener("OnTick", FunctionReference.Create(OnTick));
-        NativeAPI.HookUsermessage(118, (InputArgument)FunctionReference.Create(OnSay), HookMode.Pre);
-        _runCommand.Hook(RunCommand, HookMode.Pre);
-        _changeSpecMode.Hook(ChangeSpecMode, HookMode.Pre);
+        OnSayListener.Register();
+        OnTickListener.Register();
+        RunCommandHook.Register();
+        SpecModeHook.Register();
     }
 
-    private static HookResult OnSay(UserMessage um)
+    internal static void RaiseOnPrintMenuPre(CCSPlayerController player, MenuBase menu, string menuString)
     {
-        var index = um.ReadInt("entityindex");
-        var message = um.ReadString("param2");
-        var player = Utilities.GetPlayerFromIndex(index);
-
-        if (player is null || !player.IsValid)
-            return HookResult.Continue;
-
-        var menu = Get(player);
-
-        if (menu is null || !menu.Text)
-            return HookResult.Continue;
-
-        var item = menu.SelectedItem?.Item;
-        var value = item?.SelectedValue?.Value;
-
-        if (value is null)
-            return HookResult.Continue;
-
-        value.Data = message;
-        menu.Text = false;
-        return HookResult.Continue;
-    }
-
-    private static void OnTick()
-    {
-        foreach (var (player, (menu, menuString)) in _currentMenu)
-        {
-            if (player.Connected != PlayerConnectedState.PlayerConnected)
-            {
-                _menus.Remove(player, out _);
-                _currentMenu.Remove(player, out _);
-                continue;
-            }
-
-            OnPrintMenuPre?.Invoke(null, new MenuEvent(player, menu, menuString));
-            player.PrintToCenterHtml(menuString);
-        }
-    }
-
-    private unsafe static HookResult RunCommand(DynamicHook h)
-    {
-        var player = h.GetParam<CPlayer_MovementServices>(0).Pawn.Value.Controller.Value?.As<CCSPlayerController>();
-
-        if (player is null || !player.IsValid)
-            return HookResult.Continue;
-
-        var menu = Get(player);
-
-        if (menu is null || !menu.Options.ProcessInput)
-            return HookResult.Continue;
-
-        var userCmd = (CUserCmd*)h.GetParam<IntPtr>(1);
-
-        if (menu.Options.BlockMovement)
-        {
-            userCmd->BaseUserCmd->m_flForwardMove = 0;
-            userCmd->BaseUserCmd->m_flSideMove = 0;
-            userCmd->BaseUserCmd->m_flUpMove = 0;
-        }
-
-        var buttons = userCmd->ButtonState.PressedButtons | userCmd->ButtonState.ScrollButtons;
-
-        foreach (MenuButton button in Enum.GetValues(typeof(MenuButton)))
-        {
-            if ((buttons & menu.Options.Buttons[button]) == menu.Options.Buttons[button])
-            {
-                if (menu.InputDelay[(int)button] + menu.Options.ButtonsDelay > Environment.TickCount64)
-                    continue;
-
-                menu.InputDelay[(int)button] = Environment.TickCount64;
-                menu.Input(player, button);
-            }
-        }
-
-        return HookResult.Continue;
-    }
-
-    private static HookResult ChangeSpecMode(DynamicHook h)
-    {
-        var player = h.GetParam<CPlayer_ObserverServices>(0).Pawn.Value.Controller.Value?.As<CCSPlayerController>();
-
-        if (player is null || !player.IsValid)
-            return HookResult.Continue;
-
-        var menu = Get(player);
-
-        if (menu is null || !menu.Options.ProcessInput)
-            return HookResult.Continue;
-
-        menu.Input(player, MenuButton.Select);
-        return HookResult.Stop;
+        OnPrintMenuPre?.Invoke(null, new MenuEvent(player, menu, menuString));
     }
 
     private static void ProcessMenu(object? state)
@@ -150,21 +59,35 @@ public static partial class Menu
                 if (menu.Options.DisplayItemsInHeader && menu.SelectedItem is not null)
                     html += $"</font>{menu.Options.FooterSizeHtml()} {menu.SelectedItem.Value.Index + 1}/{menu.Items.Count}";
 
-                html += menu.Items.Count == 0 && menu.Footer is null ? "" : $"<br>";
+                html += "<br>";
+            }
+
+            var start = 0;
+            var end = menu.Items.Count;
+            var selectedIndex = menu.SelectedItem?.Index ?? 0;
+
+            if (menu.Items.Count > menu.Options._availableItems)
+            {
+                var half = menu.Options._availableItems / 2;
+                start = Math.Max(0, selectedIndex - half);
+                end = Math.Min(menu.Items.Count, start + menu.Options._availableItems);
+
+                if (end - start < menu.Options._availableItems)
+                    start = Math.Max(0, end - menu.Options._availableItems);
             }
 
             if (menu.Items.Count > 0)
                 html += $"</font>{menu.Options.ItemSizeHtml()}";
 
-            for (var i = 0; i < menu.Items.Count; i++)
+            for (var i = start; i < end; i++)
             {
                 var item = menu.Items[i];
 
                 if (item.Type == MenuItemType.Spacer)
                 {
-                    html += "<br>";
+                    html += "\u00A0<br>";
                     continue;
-                }  
+                }
 
                 if (item == menu.SelectedItem?.Item)
                     html += menu.Options.Cursor[0];
@@ -191,7 +114,7 @@ public static partial class Menu
                 if (item == menu.SelectedItem?.Item)
                     html += menu.Options.Cursor[1];
 
-                if (i < menu.Items.Count - 1 || menu.Footer is not null)
+                if (i < end - 1 || menu.Footer is not null)
                     html += "<br>";
             }
 
@@ -213,38 +136,53 @@ public static partial class Menu
             return "";
 
         var currentIndex = item.SelectedValue?.Index ?? 0;
-        var html = "";
+        var selectedLength = item.Values[currentIndex].Value.Length;
+        var remainingChars = menu.Options._availableChars - selectedLength;
+
+        if (item.Head is not null)
+            remainingChars -= item.Head.Value.Length;
+
+        if (item.Tail is not null)
+            remainingChars -= item.Tail.Value.Length;
+
+        var splitChars = remainingChars / 2 < 1 ? 1 : remainingChars / 2;
+        var prevIndex = (currentIndex == 0) ? item.Values.Count - 1 : currentIndex - 1;
+        var nextIndex = (currentIndex == item.Values.Count - 1) ? 0 : currentIndex + 1;
+
+        TrimValue(item.Values[prevIndex], splitChars);
+        TrimValue(item.Values[nextIndex], splitChars);
+        TrimValue(item.Values[currentIndex], remainingChars + selectedLength - (splitChars * 2) + 1);
 
         if (item.Options.Pinwheel)
-        {
-            int prevIndex = (currentIndex == 0) ? item.Values.Count - 1 : currentIndex - 1;
-            int nextIndex = (currentIndex == item.Values.Count - 1) ? 0 : currentIndex + 1;
+            return $"{item.Values[prevIndex]} {FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)} {item.Values[nextIndex]}";
 
-            html += $"{item.Values[prevIndex]} ";
-            html += $"{FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)}";
-            html += $" {item.Values[nextIndex]}";
-            return html;
-        }
-        
+        var html = "";
+
         if (currentIndex == 0)
         {
             html += $"{FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)}";
 
             for (var i = 0; i < 2 && i < item.Values.Count - 1; i++)
+            {
+                TrimValue(item.Values[i + 1], splitChars);
                 html += $" {item.Values[i + 1]}";
+            }
         }
         else if (currentIndex == item.Values.Count - 1)
         {
-            for (int i = 2; i > 0; i--)
+            for (var i = 2; i > 0; i--)
             {
                 if (currentIndex - i >= 0)
+                {
+                    TrimValue(item.Values[currentIndex - i], splitChars);
                     html += $"{item.Values[currentIndex - i]} ";
+                }
             }
 
             html += $"{FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)}";
         }
         else
-            html += $"{item.Values[currentIndex - 1]} {FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)} {item.Values[currentIndex + 1]}";
+            html += $"{item.Values[prevIndex]} {FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)} {item.Values[nextIndex]}";
 
         return html;
     }
@@ -255,5 +193,15 @@ public static partial class Menu
             return "";
 
         return menu.Options.Selector[index].ToString();
+    }
+
+    private static void TrimValue(MenuValue value, int maxChars)
+    {
+        if (value.Value.Length == 1 || value.Value.Length < maxChars)
+            value.Display = value.Value;
+        else if (maxChars < 1)
+            value.Display = ".";
+        else
+            value.Display = value.Value[..(maxChars - 1)] + ".";
     }
 }

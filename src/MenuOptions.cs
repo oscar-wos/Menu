@@ -6,6 +6,8 @@ namespace RMenu;
 
 public class MenuOptions
 {
+    internal int _availableItems = 1;
+    internal int _availableChars = 1;
     private MenuFontSize _headerFontSize = MenuFontSize.L;
     private MenuFontSize _itemFontSize = MenuFontSize.SM;
     private MenuFontSize _footerFontSize = MenuFontSize.S;
@@ -68,7 +70,11 @@ public class MenuOptions
         _headerString = $"<font class=\"fontSize-{(_headerFontSize).ToString().ToLower()}\">";
         _itemString = $"<font class=\"fontSize-{(_itemFontSize).ToString().ToLower()}\">";
         _footerString = $"<font class=\"fontSize-{(_footerFontSize).ToString().ToLower()}\">";
-    } 
+
+        var availableHeight = Menu.MENU_HEIGHT - ((int)HeaderFontSize + (int)FooterFontSize);
+        _availableItems = Math.Max(1, availableHeight / (int)ItemFontSize);
+        _availableChars = (int)(Menu.MENU_LENGTH / ((int)ItemFontSize * 0.6)) - Selector[0].Value.Length - Selector[1].Value.Length;
+    }
 
     public MenuValue[] Cursor =
     [
