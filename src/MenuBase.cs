@@ -1,45 +1,115 @@
-﻿using Menu.Enums;
+﻿using CounterStrikeSharp.API.Core;
+using RMenu.Enums;
 
-namespace Menu;
+namespace RMenu;
 
-public class MenuBase(MenuValue title)
+public class MenuBase
 {
-    public Action<MenuButtons, MenuBase, MenuItem?>? Callback;
-    public MenuValue Title { get; set; } = title;
+    public long[] InputDelay { get; } = new long[Enum.GetValues(typeof(MenuButton)).Length];
+    public MenuOptions Options { get; init; }
+    public List<MenuValue>? Header { get; set; }
+    public List<MenuValue>? Footer { get; set; }
+    public Action<CCSPlayerController, MenuBase, MenuAction>? Callback { get; set; }
     public List<MenuItem> Items { get; set; } = [];
-    public int Option { get; set; } = 0;
+    public (int Index, MenuItem Item)? SelectedItem { get; set; } = null;
+    public bool Text { get; set; } = false;
 
-    public bool AcceptButtons { get; set; } = false;
-    public bool AcceptInput { get; set; } = false;
+    public MenuBase(MenuValue? header = null, MenuValue? footer = null, MenuOptions? options = null)
+    {
+        Header = header is null ? null : [header];
+        Footer = footer is null ? null : [footer];
+        Options = options ?? new MenuOptions();
+    }
 
-    public MenuValue[] Cursor =
-    [
-        new MenuValue("►") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("◄") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
+    public MenuBase(IEnumerable<MenuValue>? header = null, IEnumerable<MenuValue>? footer = null, MenuOptions? options = null)
+    {
+        Header = header?.ToList();
+        Footer = footer?.ToList();
+        Options = options ?? new MenuOptions();
+    }
 
-    public MenuValue[] Selector =
-    [
-        new MenuValue("[ ") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue(" ]") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
+    public MenuBase(MenuOptions? options = null)
+    {
+        Options = options ?? new MenuOptions();
+    }
 
-    public MenuValue[] Bool =
-    [
-        new MenuValue("✘") { Prefix = "<font color=\"#FF0000\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("✔") { Prefix = "<font color=\"#008000\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
+    public MenuBase()
+    {
+        Options = new MenuOptions();
+    }
 
-    public MenuValue[] Slider =
-    [
-        new MenuValue("(") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue(")") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("-") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-        new MenuValue("|") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
-    ];
+    public static bool IsSelectable(MenuItem item)
+    {
+        return item.Type == MenuItemType.Choice ||
+               item.Type == MenuItemType.Button ||
+               item.Type == MenuItemType.Bool ||
+               item.Type == MenuItemType.ChoiceBool ||
+               item.Type == MenuItemType.Slider ||
+               item.Type == MenuItemType.Input;
+    }
 
-    public MenuValue Input = new("________") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" };
-    public MenuValue Separator = new(" - ") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" };
+    private bool SelectItem(int index) => IsSelectable(Items[index]) && (SelectedItem = (index, Items[index])) != null;
+
+    public void Input(CCSPlayerController player, MenuButton button)
+    {
+        switch (button)
+        {
+            case MenuButton.Assist:
+                Callback?.Invoke(player, this, MenuAction.Assist);
+                break;
+
+            case MenuButton.Up when !Text:
+                if (SelectedItem is null)
+                    return;
+
+                for (int newIndex = SelectedItem.Value.Index - 1; newIndex >= 0; newIndex--)
+                {
+                    if (SelectItem(newIndex))
+                    {
+                        Callback?.Invoke(player, this, MenuAction.Update);
+                        break;
+                    }
+                }
+
+                break;
+
+            case MenuButton.Down when !Text:
+                if (SelectedItem is null)
+                    return;
+
+                for (int newIndex = SelectedItem.Value.Index + 1; newIndex < Items.Count; newIndex++)
+                {
+                    if (SelectItem(newIndex))
+                    {
+                        Callback?.Invoke(player, this, MenuAction.Update);
+                        break;
+                    }
+                }
+
+                break;
+
+            case MenuButton.Left or MenuButton.Right when !Text:
+                if (SelectedItem is null)
+                    return;
+
+                if (SelectedItem.Value.Item.Input(button))
+                    Callback?.Invoke(player, this, MenuAction.Update);
+
+                break;
+
+            case MenuButton.Select when !Text:
+                if (SelectedItem is null)
+                    return;
+
+                Callback?.Invoke(player, this, MenuAction.Select);
+                break;
+
+            case MenuButton.Exit when Options.Exitable:
+                Callback?.Invoke(player, this, MenuAction.Cancel);
+                Menu.Clear(player);
+                break;
+        }
+    }
 
     public void AddItem(MenuItem item)
     {

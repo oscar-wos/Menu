@@ -1,309 +1,166 @@
-﻿using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
-using Menu;
-using Menu.Enums;
+﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
+using RMenu;
+using RMenu.Enums;
+using RMenu.Extensions;
+using System.Drawing;
+using System.Reflection;
 
-namespace example;
+namespace Example;
 
 public class Example : BasePlugin
 {
-    public override string ModuleName => "example";
+    public override string ModuleName => "Example";
     public override string ModuleVersion => "1.0.0";
-    public Menu.Menu Menu { get; } = new();
 
-    private readonly Dictionary<CCSPlayerController, MenuBase> _dynamicMenu = new();
+    private Dictionary<CCSPlayerController, MenuBase> _menus = new();
 
-    public Example()
+    public override void Load(bool hotReload)
     {
-        global::Menu.Menu.OnDrawMenu += (_, menuEvent) =>
+        AddCommand("css_test", "", CommandTest);
+
+        AddCommand("css_test2", "", (player, info) =>
         {
-            var controller = menuEvent.Controller;
-
-            if (!_dynamicMenu.TryGetValue(controller, out var dynamicMenu))
-                return;
-
-            if (menuEvent.Menu != dynamicMenu)
-                return;
-
-            var dynamicValue = (DynamicValue)dynamicMenu.Items[0].Head!;
-            dynamicValue.Position = controller.PlayerPawn.Value!.AbsOrigin!;
-        };
-    }
-
-    public override void Load(bool isReload)
-    {
-        AddCommand("css_test", "", (controller, _) =>
-        {
-            if (controller == null || !controller.IsValid)
-                return;
-
-            var cursor = new MenuValue[2]
+            var menuOptions = new MenuOptions()
             {
-                new("►") { Prefix = "<font color=\"#3399FF\">", Suffix = "<font color=\"#FFFFFF\">" },
-                new("◄") { Prefix = "<font color=\"#3399FF\">", Suffix = "<font color=\"#FFFFFF\">" },
+                DisplayItemsInHeader = false,
+                BlockMovement = true
             };
 
-            var selector = new MenuValue[2]
+            var newMenu = new MenuBase(new MenuValue("Skins", new Color().RainbowStrobe()), new MenuValue("kzg", new Color().RainbowStrobeReversed(180)), options: menuOptions);
+            newMenu.AddItem(new(MenuItemType.Choice, head: "type: ", values: ["Pistols", "Mid", "Rifles", "Knife", "Gloves", "Model"]));
+            //newMenu.AddItem(new(MenuItemType.Choice, values: ))
+
+            var items = typeof(CsItem)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .OrderBy(f => f.MetadataToken) // Preserves declaration order
+            .GroupBy(f => (int)f.GetValue(null))
+            .Select(g => g.First())         // Select the first declared field for each value
+            .Select(f => (CsItem)f.GetValue(null))
+            .ToArray();
+
+            var pistols = items.Where(item => (int)item >= 200 && (int)item < 300).ToArray();
+
+            // Filter mid-tier weapons: values between 300 and 312 (i.e. <400)
+            var mid = items.Where(item => (int)item >= 300 && (int)item < 400).ToArray();
+
+            // Filter rifles: values between 400 and 410 (i.e. <500)
+            var rifles = items.Where(item => (int)item >= 400 && (int)item < 500).ToArray();
+
+            newMenu.AddItem(new(MenuItemType.Choice, head: "weapon: ", values: [.. pistols.Select(p => new MenuValue(p.ToString(), data: p))]));
+            newMenu.AddItem(new(MenuItemType.Spacer));
+
+
+            Menu.Add(player, newMenu, (player, menu, action) =>
             {
-                new("[ ") { Prefix = "<font color=\"#0033FF\">", Suffix = "<font color=\"#FFFFFF\">" },
-                new(" ]") { Prefix = "<font color=\"#0033FF\">", Suffix = "<font color=\"#FFFFFF\">" },
-            };
-
-            var mainMenu = new MenuBase(new MenuValue("Main Menu") { Prefix = "<font class=\"fontSize-L\">", Suffix = "<font class=\"fontSize-sm\">" })
-            {
-                Cursor = cursor,
-                Selector = selector
-            };
-
-            var options = new List<MenuValue>
-            {
-                new("option1") { Prefix = "<font color=\"#9900FF\">", Suffix = "<font color=\"#FFFFFF\">" },
-                new("option2"),
-                new("option3"),
-                new("option4") { Prefix = "<font color=\"#33AA33\">", Suffix = "<font color=\"#FFFFFF\">" },
-                new("option5")
-            };
-
-            var choices = new List<MenuValue>
-            {
-                new("choice1") { Prefix = "<font color=\"#AA1133\">", Suffix = "<font color=\"#FFFFFF\">" },
-                new("choice2"),
-                new("choice3"),
-                new("choice4") { Prefix = "<font color=\"#BB9933\">", Suffix = "<font color=\"#FFFFFF\">" },
-                new("choice5")
-            };
-
-            var players = Utilities.GetPlayers().Select(player => (MenuValue)new PlayerValue(player.PlayerName, player.UserId)).ToList();
-            players.Add(new PlayerValue("p1", 1) { Prefix = "<font color=\"#AA1133\">", Suffix = "<font color=\"#FFFFFF\">" });
-            players.Add(new PlayerValue("p2", 2));
-
-            var itemOptions = new MenuItem(MenuItemType.ChoiceBool, options);
-            var itemPinwheel = new MenuItem(MenuItemType.Choice, new MenuValue("h: "), choices, new MenuValue(" :t"), true);
-            var itemPlayers = new MenuItem(MenuItemType.Button, new MenuValue("button: ") { Prefix = "<font color=\"#AA33CC\">", Suffix = "<font color=\"#FFFFFF\">" }, players, new MenuValue(" :tail") { Prefix = "<font color=\"#DDAA11\">", Suffix = "<font color=\"#FFFFFF\">" });
-            var itemSlider = new MenuItem(MenuItemType.Input, new MenuValue("input: "));
-
-            mainMenu.AddItem(itemOptions);
-            mainMenu.AddItem(itemPinwheel);
-            mainMenu.AddItem(itemPlayers);
-            mainMenu.AddItem(itemSlider);
-            mainMenu.AddItem(new MenuItem(MenuItemType.Spacer));
-
-            var customButtons = new List<MenuValue>
-            {
-                new ButtonValue("Search", ButtonType.Search) { Prefix = "<font color=\"#AA1133\">", Suffix = "<font color=\"#FFFFFF\">" },
-                new ButtonValue("Find", ButtonType.Find),
-                new ButtonValue("Select", ButtonType.Select) { Prefix = "<font color=\"#AA1133\">", Suffix = "<font color=\"#FFFFFF\">" }
-            };
-
-            var itemCustomButtons = new MenuItem(MenuItemType.Button, customButtons);
-            mainMenu.AddItem(itemCustomButtons);
-
-            // Menu.SetMenu() to clear the stack and add
-            Menu.SetMenu(controller, mainMenu, (buttons, menu, selectedItem) =>
-            {
-                // MenuButtons.Up, MenuButtons.Down, MenuButtons.Left, MenuButtons.Right are not used in this example
-                if (buttons != MenuButtons.Select)
+                if (action != MenuAction.Update)
                     return;
 
-                // mainMenu.AddItem(itemCustomButtons) is at index 4, since MenuItemType.Spacer and MenuItemType.Text are not counted (not selectable)
-                if (menu.Option == 4)
+                if (menu.SelectedItem?.Index == 0)
                 {
-                    // var customButtons[]
-                    var menuValues = selectedItem.Values!;
-
-                    // MenuValue
-                    var selectedValue = menuValues[selectedItem.Option];
-
-                    // Cast MenuValue to ButtonValue
-                    var buttonValue = (ButtonValue)selectedValue;
-
-                    switch (buttonValue.Button)
-                    {
-                        case ButtonType.Search:
-                            Console.WriteLine("Search button clicked");
-                            break;
-
-                        case ButtonType.Find:
-                            Console.WriteLine("Find button clicked");
-                            break;
-
-                        case ButtonType.Select:
-                            CustomSelect(controller, new Vector(0, 0, 0));
-                            break;
-                    }
-
-                    // Without custom ButtonValue class
-                    switch (selectedItem.Option)
-                    {
-                        case 0:
-                            Console.WriteLine("Search button clicked");
-                            break;
-
-                        case 1:
-                            Console.WriteLine("Find button clicked");
-                            break;
-                    }
-
-                    // Accomplishes the same as above due to "hard coded" MenuValue.Value, this will not work if using Localized or other dynamic values you don't know ahead of time
-                    switch (buttonValue.Value)
-                    {
-                        case "Search":
-                            Console.WriteLine("Search button clicked");
-                            break;
-
-                        case "Find":
-                            Console.WriteLine("Find button clicked");
-                            break;
-                    }
-                }
-            });
-        });
-
-        AddCommand("css_test1", "", (controller, _) =>
-        {
-            if (controller == null || !controller.IsValid)
-                return;
-
-            var dynamicMenu = new MenuBase(new MenuValue("Dynamic Menu") { Prefix = "<font class=\"fontSize-L\">", Suffix = "<font class=\"fontSize-sm\">" });
-
-            var dynamicItem = new MenuItem(MenuItemType.Text, new DynamicValue(""));
-            dynamicMenu.AddItem(dynamicItem);
-
-            var saveButton = new MenuItem(MenuItemType.Button, [new MenuValue("Save")]);
-            dynamicMenu.AddItem(saveButton);
-
-            _dynamicMenu[controller] = dynamicMenu;
-
-            Menu.SetMenu(controller, dynamicMenu, (buttons, menu, _) =>
-            {
-                if (buttons != MenuButtons.Select)
-                    return;
-
-                if (menu.Option != 0)
-                    return;
-
-                if (menu.Option == 0)
-                {
-                    var dynamicValue = (DynamicValue)menu.Items[0].Head!;
-                    Console.WriteLine($"{dynamicValue}");
-
-                    CustomSelect(controller, dynamicValue.Position);
+                    if (menu.SelectedItem?.Item.SelectedValue?.Index == 0)
+                        menu.Items[1].Values = [.. pistols.Select(p => new MenuValue(p.ToString(), data: p))];
+                    else if (menu.SelectedItem?.Item.SelectedValue?.Index == 1)
+                        menu.Items[1].Values = [.. mid.Select(m => new MenuValue(m.ToString(), data: m))];
+                    else if (menu.SelectedItem?.Item.SelectedValue?.Index == 2)
+                        menu.Items[1].Values = [.. rifles.Select(r => new MenuValue(r.ToString(), data: r))];
                 }
             });
         });
     }
 
-    private void CustomSelect(CCSPlayerController controller, Vector pos)
+    private void CommandTest(CCSPlayerController? player, CommandInfo info)
     {
-        // Since it's a sub menu setting Prefix will not affect the title as it inherits from Menu[0], Suffix will still work
-        var subMenu = new MenuBase(new MenuValue("Sub Menu") { Prefix = "<font class=\"fontSize-XXXL\">", Suffix = "<font class=\"fontSize-m\">" }) ;
+        if (player == null || !player.IsValid)
+            return;
 
-        var options = new List<MenuValue>
+        var options = new MenuOptions()
         {
-            new("o1") { Prefix = "<font color=\"#9900FF\">", Suffix = "<font color=\"#FFFFFF\">" },
-            new("o2"),
-            new("o3"),
-            new("o4") { Prefix = "<font color=\"#33AA33\">", Suffix = "<font color=\"#FFFFFF\">" },
-            new("o5")
+            BlockMovement = true,
+            DisplayItemsInHeader = true
         };
 
-        // MenuItemType.ChoiceBool overrides prefix colors to be Menu.Bool[MenuBool.False] and Menu.Bool[MenuBool.True] which can be set the same way as Selector or Cursor above
-        var itemOptions = new MenuItem(MenuItemType.ChoiceBool, new MenuValue("options: "), options);
-        subMenu.AddItem(itemOptions);
-        subMenu.AddItem(new MenuItem(MenuItemType.Bool));
-
-        subMenu.AddItem(new MenuItem(MenuItemType.Spacer));
-        subMenu.AddItem(new MenuItem(MenuItemType.Text, new MenuValue($"Saving: {pos.X} {pos.Y} {pos.Z}")));
-
-        // Menu.AddMenu() to add to the stack (sub-menu)
-        Menu.AddMenu(controller, subMenu, (buttons, menu, item) =>
+        var customHeader = new List<MenuValue>
         {
-            if (buttons != MenuButtons.Select)
-                return;
-
-            if (menu.Option == 0)
-            {
-                var valueItem = item.Values![item.Option];
-                Console.WriteLine($"Selected: {valueItem.Value} [{item.Option}]");
-            }
-            
-            if (menu.Option == 1)
-                Console.WriteLine($"Bool: {item.Data[0]}");
-        });
-    }
-
-    private void BuildMenu(CCSPlayerController controller)
-    {
-        // Create a Menu object which holds all data
-        var mainMenu = new MenuBase(new MenuValue("Main Menu") { Prefix = "<font class=\"fontSize-L\">", Suffix = "<font class=\"fontSize-sm\">" });
-
-        // Can add custom formatting, MenuValue[2] Cursor, MenuValue[2] Selector, MenuValue[2] Bool, MenuValue[4] Slider, MenuValue[1] Input
-        var cursor = new MenuValue[2]
-        {
-            // MenuValue is the fundamental building block of everything in the Menu - MenuValue.Value, MenuValue.Prefix, MenuValue.Suffix
-            new("--> ") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" },
-            new(" <--") { Prefix = "<font color=\"#FFFFFF\">", Suffix = "<font color=\"#FFFFFF\">" }
+            new("wow", new Color().RainbowStrobe()),
+            new("header", Color.Green)
         };
+
+        //var newMenu = new MenuBase(header: ["test"], options: options);
+
+        var itemOptions = new MenuItemOptions()
+        {
+            Pinwheel = false
+        };
+
+        var menuFontSizes = Enum.GetValues(typeof(MenuFontSize)).Cast<MenuFontSize>().Select(fontSize => new MenuValue(fontSize.ToString(), data: fontSize)).ToList();
+
+        var newMenu = new MenuBase(header: customHeader, footer: ["footer: ", new("rasco", new Color().RainbowStrobeReversed(20))], options: options);
+        newMenu.AddItem(new(MenuItemType.Choice, "h: ", values: menuFontSizes));
+        newMenu.Items[0].SelectedValue = (5, menuFontSizes[5]);
+
+        newMenu.AddItem(new(MenuItemType.Choice, "i: ", values: menuFontSizes));
+        newMenu.Items[1].SelectedValue = (2, menuFontSizes[2]);
+
+        newMenu.AddItem(new(MenuItemType.Choice, "f: ", values: menuFontSizes));
+        newMenu.Items[2].SelectedValue = (1, menuFontSizes[1]);
         
-        mainMenu.Cursor = cursor;
-
-        // Let's add a simple text field to the menu, each (row) is a MenuItem which holds data for that (row)
-        // Again MenuValue is the fundamental building block of everything in the Menu - MenuValue.Value, MenuValue.Prefix, MenuValue.Suffix
-
-        var textItem = new MenuValue("Welcome to the new menu!");
-
-        // Let's modify the prefix and suffix of the textItem
-
-        textItem.Prefix = "<font color=\"#FF0000\">";
-        textItem.Suffix = "<font color=\"#FFFFFF\">";
-
-        // Simplified
-
-        textItem = new MenuValue("Welcome to the new menu!")
+        newMenu.AddItem(new(MenuItemType.Choice, values: ["Dragonfire", "Acid Fade", "Turbo Peak", "Big Iron", new("Blood in the Water", new Color().RainbowStrobe())], options: itemOptions));
+        newMenu.AddItem(new(MenuItemType.Spacer));
+        newMenu.AddItem(new(MenuItemType.Choice, head: "choice: ", values: [new("ak-47", Color.Red, data: true), new("m4a1", new Color().RainbowStrobe(), data: 2), "3", "4", new("5", data: player)]));
+        newMenu.AddItem(new(MenuItemType.Spacer));
+        newMenu.AddItem(new(MenuItemType.Button, new("button", new Color().Rainbow(), data: "object?", (player, menuAction, menuValue) =>
         {
-            Prefix = "<font color=\"#FF0000\">",
-            Suffix = "<font color=\"#FFFFFF\">"
-        };
+            if (menuAction == MenuAction.Select)
+                Console.WriteLine($"Selected, data: {menuValue.Data}");
+        })));
+        newMenu.AddItem(new(MenuItemType.Button, new("button2 strobe fast: ", new Color().RainbowStrobe(254)), ["1", "2"]));
+        newMenu.AddItem(new(MenuItemType.Button, values: ["1"], options: itemOptions));
+        //newMenu.AddItem(new(MenuItemType.Button, new("button4 strobe fast reversed", new Color().RainbowStrobeReversed(254))));
+        //newMenu.AddItem(new(MenuItemType.Button, new("button6 strobe slow reversed", new Color().RainbowStrobe(60))));
 
-        var simpleTextItem = new MenuItem(MenuItemType.Text, textItem);
+        /*
+        //newMenu.AddItem(new(MenuItemType.Spacer, "lol"));
+        newMenu.AddItem(new(MenuItemType.Button, new("green", Color.Green)));
+        newMenu.AddItem(new(MenuItemType.Button, new("red", Color.Red)));
+        newMenu.AddItem(new(MenuItemType.Button, "blank"));
+        newMenu.AddItem(new(MenuItemType.Button, new("blue", Color.Blue)));
 
-        // Now let's add the textItem to the menu
-        mainMenu.AddItem(simpleTextItem);
+        newMenu.AddItem(new(MenuItemType.Button, new("full text", new Color().Rainbow())));
+        newMenu.AddItem(new(MenuItemType.Button, new("strobe fast", new Color().RainbowStrobe(254))));
+        newMenu.AddItem(new(MenuItemType.Button, new("strobe medium", new Color().RainbowStrobe(128))));
+        newMenu.AddItem(new(MenuItemType.Button, new("strobe slow", new Color().RainbowStrobe(30))));
+        //newMenu.AddItem(new(MenuItemType.Spacer));
+        */
+        for (var i = 0; i < 3; i++)
+            newMenu.AddItem(new(MenuItemType.Button, $"button {i}"));
 
-        // And let's add to the global stack to print to the player
-        Menu.SetMenu(controller, mainMenu, (buttons, menu, item) => { });
+        //newMenu.AddItem(new(MenuItemType.Spacer));
+        //newMenu.AddItem(new(MenuItemType.Text, "text"));
+        //newMenu.AddItem(new(MenuItemType.Text, "text"));
 
-        // The library automatically handles the deposition of the menu
-        // Using Tab (Scoreboard) exists the menu, and Ctrl (Duck) will go back to the previous menu
-    }
-}
+        Menu.Add(player, newMenu, OnMenuAction);
 
-public class PlayerValue(string value, int? id) : MenuValue(value)
-{
-    public int? Id { get; set; } = id;
-    //public Player? Player { get; set; }
-    //public CCSPlayerController? Controller { get; set; }
-}
+        void OnMenuAction(CCSPlayerController player, MenuBase menu, MenuAction action)
+        {
+            if (action != MenuAction.Update)
+                return;
 
-public class ButtonValue(string value, ButtonType button) : MenuValue(value)
-{
-    public ButtonType Button { get; set; } = button;
-}
+            switch (menu.SelectedItem?.Index)
+            {
+                case 0:
+                    menu.Options.HeaderFontSize = (MenuFontSize)menu.SelectedItem?.Item.SelectedValue?.Value.Data;
+                    break;
 
-public enum ButtonType
-{
-    Search,
-    Find,
-    Select
-}
+                case 1:
+                    menu.Options.ItemFontSize = (MenuFontSize)menu.SelectedItem?.Item.SelectedValue?.Value.Data;
+                    break;
 
-public class DynamicValue(string value) : MenuValue(value)
-{
-    public Vector Position { get; set; } = new(0, 0, 0);
-
-    public override string ToString()
-    {
-        return $"{Prefix}x: {Position.X} y: {Position.Y} z: {Position.Z}{Suffix}";
+                case 2:
+                    menu.Options.FooterFontSize = (MenuFontSize)menu.SelectedItem?.Item.SelectedValue?.Value.Data;
+                    break;
+            }
+        }
     }
 }

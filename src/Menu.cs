@@ -1,370 +1,203 @@
 ﻿using CounterStrikeSharp.API.Core;
-using Menu.Enums;
+using RMenu.Enums;
+using RMenu.Helpers;
+using RMenu.Hooks;
+using RMenu.Listeners;
+using System.Collections.Concurrent;
 
-namespace Menu;
+namespace RMenu;
 
-public class Menu
+public static partial class Menu
 {
-    private static readonly Dictionary<CCSPlayerController, Stack<MenuBase>> Menus = [];
-    private static readonly SayEvent OnSay = new("say", OnSayEvent);
-    private static readonly SayEvent OnSayTeam = new("say_team", OnSayEvent);
-    private static readonly OnTick OnTick = new(OnTickListener);
-    public static event EventHandler<MenuEvent>? OnDrawMenu;
+    internal const int MENU_HEIGHT = 140;
+    internal const int MENU_LENGTH = 300;
+    internal static readonly ConcurrentDictionary<CCSPlayerController, List<Stack<MenuBase>>> _menus = [];
+    internal static readonly Dictionary<CCSPlayerController, (MenuBase, string)> _currentMenu = [];
+    private static readonly Timer _menuTimer = new(ProcessMenu, null, 0, 100);
 
-    private static HookResult OnSayEvent(CCSPlayerController? controller, string message)
+    public static event EventHandler<MenuEvent>? OnPrintMenuPre;
+
+    static Menu()
     {
-        if (controller == null || !controller.IsValid || !Menus.TryGetValue(controller, out var value))
-            return HookResult.Continue;
-
-        var menu = value.Peek();
-
-        if (!menu.AcceptInput)
-            return HookResult.Continue;
-
-        var selectedItem = menu.Items[menu.Option];
-        selectedItem.DataString = message;
-        menu.AcceptInput = false;
-
-        menu.Callback?.Invoke(MenuButtons.Input, menu, selectedItem);
-        return HookResult.Handled;
+        OnSayListener.Register();
+        OnTickListener.Register();
+        RunCommandHook.Register();
+        SpecModeHook.Register();
     }
 
-    private static void OnTickListener()
+    internal static void RaiseOnPrintMenuPre(CCSPlayerController player, MenuBase menu, string menuString)
     {
-        foreach (var (controller, menus) in Menus)
+        OnPrintMenuPre?.Invoke(null, new MenuEvent(player, menu, menuString));
+    }
+
+    private static void ProcessMenu(object? state)
+    {
+        Rainbow.UpdateRainbowHue();
+
+        Parallel.ForEach(_menus, kvp =>
         {
-            if (!controller.IsValid || menus.Count == 0)
+            var player = kvp.Key;
+
+            if (!player.IsValid)
+                return;
+
+            var menu = Get(player);
+
+            if (menu is null)
+                return;
+
+            var html = "\u200A";
+
+            if (menu.Header is not null)
             {
-                Menus.Remove(controller);
-                continue;
+                html += menu.Options.HeaderSizeHtml();
+
+                foreach (var header in menu.Header)
+                    html += header;
+
+                if (menu.Options.DisplayItemsInHeader && menu.SelectedItem is not null)
+                    html += $"</font>{menu.Options.FooterSizeHtml()} {menu.SelectedItem.Value.Index + 1}/{menu.Items.Count}";
+
+                html += "<br>";
             }
 
-            var menu = menus.Peek();
-            var buttons = (MenuButtons)controller.Buttons;
-            var selectItems = menu.Items.Where(menuItem => menuItem.Type is not (MenuItemType.Spacer or MenuItemType.Text)).ToList();
-            var selectedItem = selectItems.Count > 0 ? selectItems[menu.Option] : null;
+            var start = 0;
+            var end = menu.Items.Count;
+            var selectedIndex = menu.SelectedItem?.Index ?? 0;
 
-            if (menu.AcceptButtons)
+            if (menu.Items.Count > menu.Options._availableItems)
             {
-                switch (buttons)
+                var half = menu.Options._availableItems / 2;
+                start = Math.Max(0, selectedIndex - half);
+                end = Math.Min(menu.Items.Count, start + menu.Options._availableItems);
+
+                if (end - start < menu.Options._availableItems)
+                    start = Math.Max(0, end - menu.Options._availableItems);
+            }
+
+            if (menu.Items.Count > 0)
+                html += $"</font>{menu.Options.ItemSizeHtml()}";
+
+            for (var i = start; i < end; i++)
+            {
+                var item = menu.Items[i];
+
+                if (item.Type == MenuItemType.Spacer)
                 {
-                    case MenuButtons.Select:
-                        if (selectedItem == null)
-                            break;
-
-                        switch (selectedItem.Type)
-                        {
-                            case MenuItemType.Bool:
-                                selectedItem.Data[0] = selectedItem.Data[0] == 0 ? 1 : 0;
-                                break;
-
-                            case MenuItemType.ChoiceBool:
-                                selectedItem.Data[selectedItem.Option] = selectedItem.Data[selectedItem.Option] == 0 ? 1 : 0;
-                                break;
-
-                            case MenuItemType.Input:
-                                menu.AcceptInput = true;
-                                break;
-                        }
-
-                        break;
-
-                    case MenuButtons.Up when !menu.AcceptInput:
-                        menu.Option = menu.Option == 0 ? 0 : menu.Option - 1;
-                        break;
-
-                    case MenuButtons.Down when !menu.AcceptInput:
-                        if (selectItems.Count > 0)
-                            menu.Option = menu.Option == selectItems.Count - 1 ? selectItems.Count - 1 : menu.Option + 1;
-                        break;
-
-                    case MenuButtons.Left when !menu.AcceptInput:
-                        if (selectedItem == null)
-                            break;
-
-                        switch (selectedItem.Type)
-                        {
-                            case (MenuItemType.Choice or MenuItemType.ChoiceBool or MenuItemType.Button):
-                                if (selectedItem.Pinwheel)
-                                    selectedItem.Option = selectedItem.Option == 0 ? selectedItem.Values!.Count - 1 : selectedItem.Option - 1;
-                                else
-                                    selectedItem.Option = selectedItem.Option == 0 ? 0 : selectedItem.Option - 1;
-                                break;
-
-                            case MenuItemType.Slider:
-                                selectedItem.Data[0] = selectedItem.Data[0] == 0 ? 0 : selectedItem.Data[0] - 1;
-                                break;
-
-                        }
-
-                        break;
-
-                    case MenuButtons.Right when !menu.AcceptInput:
-                        if (selectedItem == null)
-                            break;
-
-                        switch (selectedItem.Type)
-                        {
-                            case (MenuItemType.Choice or MenuItemType.ChoiceBool or MenuItemType.Button):
-                                if (selectedItem.Pinwheel)
-                                    selectedItem.Option = selectedItem.Option == selectedItem.Values!.Count - 1 ? 0 : selectedItem.Option + 1;
-                                else
-                                    selectedItem.Option = selectedItem.Option == selectedItem.Values!.Count - 1 ? selectedItem.Values.Count - 1 : selectedItem.Option + 1;
-                                break;
-
-                            case MenuItemType.Slider:
-                                selectedItem.Data[0] = selectedItem.Data[0] == 10 ? 10 : selectedItem.Data[0] + 1;
-                                break;
-
-                        }
-
-                        break;
-
-                    case MenuButtons.Back:
-                        if (menu.AcceptInput)
-                        {
-                            menu.AcceptInput = false;
-                            break;
-                        }
-
-                        if (menus.Count > 1)
-                        {
-                            menu.Callback?.Invoke(buttons, menu, null);
-                            menus.Pop();
-                        }
-
-                        continue;
-
-                    case MenuButtons.Exit:
-                        menu.Callback?.Invoke(buttons, menu, null);
-                        Menus.Remove(controller);
-                        continue;
+                    html += "\u00A0<br>";
+                    continue;
                 }
 
-                if (buttons != 0 && buttons != MenuButtons.Back)
-                    menu.Callback?.Invoke(buttons, menu, selectedItem);
+                if (item == menu.SelectedItem?.Item)
+                    html += menu.Options.Cursor[0];
+
+                if (item.Type == MenuItemType.Button && (item.Values is null || item.Values.Count == 0))
+                    html += FormatSelector(menu, item, 0);
+
+                if (item.Head is not null)
+                    html += item.Head;
+
+                switch (item.Type)
+                {
+                    case MenuItemType.Button or MenuItemType.Choice or MenuItemType.ChoiceBool:
+                        html += FormatValues(menu, item);
+                        break;
+                }
+
+                if (item.Tail is not null)
+                    html += item.Tail;
+
+                if (item.Type == MenuItemType.Button && (item.Values is null || item.Values.Count == 0))
+                    html += FormatSelector(menu, item, 1);
+
+                if (item == menu.SelectedItem?.Item)
+                    html += menu.Options.Cursor[1];
+
+                if (i < end - 1 || menu.Footer is not null)
+                    html += "<br>";
             }
 
-            menu.AcceptButtons = buttons == 0;
-            DrawMenu(controller, menu, selectedItem);
-            RaiseDrawMenu(controller, menu, selectedItem);
-        }
-    }
-
-    protected static void RaiseDrawMenu(CCSPlayerController controller, MenuBase menu, MenuItem? selectedItem)
-    {
-        OnDrawMenu?.Invoke(null, new MenuEvent(controller, menu, selectedItem));
-    }
-
-    public static void DrawMenu(CCSPlayerController controller, MenuBase menu, MenuItem? selectedItem)
-    {
-        var html = "";
-
-        if (!Menus.TryGetValue(controller, out var menus))
-            return;
-
-        if (menus.Count > 1)
-        {
-            for (var i = menus.Count - 1; i >= 0; i--)
+            if (menu.Footer is not null)
             {
-                var stackMenu = menus.ElementAt(i);
+                html += $"</font>{menu.Options.FooterSizeHtml()}";
 
-                if (i == menus.Count - 1)
-                    html += $"\u00A0{stackMenu.Title.Prefix}{stackMenu.Title.Value}{stackMenu.Separator}";
-                else if (i == 0)
-                    html += $"{stackMenu.Title.Value}{stackMenu.Title.Suffix}";
-                else
-                    html += $"{stackMenu.Title.Value}{stackMenu.Separator}";
-            }
-        }
-        else
-            html += $"\u00A0{menu.Title}";
-
-        foreach (var menuItem in menu.Items)
-        {
-            html += $"<br>\u00A0{menu.Title.Suffix}";
-
-            if (selectedItem != null && menuItem == selectedItem)
-                html += menu.Cursor[(int)MenuCursor.Left];
-
-            if (menuItem.Head != null)
-                html += menuItem.Head;
-
-            switch (menuItem.Type)
-            {
-                case MenuItemType.Choice or MenuItemType.ChoiceBool or MenuItemType.Button:
-                    html += FormatValues(menu, menuItem, selectedItem!);
-                    break;
-
-                case MenuItemType.Slider:
-                    html += FormatSlider(menu, menuItem);
-                    break;
-
-                case MenuItemType.Input:
-                    html += FormatInput(menu, menuItem, selectedItem!);
-                    break;
-
-                case MenuItemType.Bool:
-                    html += FormatBool(menu, menuItem);
-                    break;
+                foreach (var footer in menu.Footer)
+                    html += footer;
             }
 
-            if (menuItem.Tail != null)
-                html += menuItem.Tail;
-
-            if (selectedItem != null && menuItem == selectedItem)
-                html += menu.Cursor[(int)MenuCursor.Right];
-        }
-
-        controller.PrintToCenterHtml(html);
+            _currentMenu[player] = (menu, html);
+        });
     }
 
-    private static string FormatValues(MenuBase menu, MenuItem menuItem, MenuItem selectedItem)
+    private static string FormatValues(MenuBase menu, MenuItem item)
     {
-        var html = "";
-
-        if (menuItem.Pinwheel)
-        {
-            var prev = menuItem.Option - 1;
-            var next = menuItem.Option + 1;
-
-            if (prev < 0)
-                prev = menuItem.Values!.Count - 1;
-
-            if (next > menuItem.Values!.Count - 1)
-                next = 0;
-
-            html += $"{FormatString(menu, menuItem, prev)} ";
-            html += $"{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Left)}{FormatString(menu, menuItem, menuItem.Option)}{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Right)}";
-            html += $" {FormatString(menu, menuItem, next)}";
-
-            return html;
-        }
-
-        if (menuItem.Option == 0)
-        {
-            html += $"{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Left)}{FormatString(menu, menuItem, 0)}{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Right)}";
-
-            for (var i = 0; i < 2 && i < menuItem.Values!.Count - 1; i++)
-                html += $" {FormatString(menu, menuItem, i + 1)}";
-        }
-        else if (menuItem.Option == menuItem.Values!.Count - 1)
-        {
-            for (var i = 2; i > 0; i--)
-            {
-                if (menuItem.Option - i >= 0)
-                    html += $"{FormatString(menu, menuItem, menuItem.Option - i)} ";
-            }
-
-            html += $"{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Left)}{FormatString(menu, menuItem, menuItem.Option)}{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Right)}";
-        }
-        else
-            html += $"{FormatString(menu, menuItem, menuItem.Option - 1)} {FormatSelector(menu, menuItem, selectedItem, MenuCursor.Left)}{FormatString(menu, menuItem, menuItem.Option)}{FormatSelector(menu, menuItem, selectedItem, MenuCursor.Right)} {FormatString(menu, menuItem, menuItem.Option + 1)}";
-
-        return html;
-    }
-
-    private static string FormatString(MenuBase menu, MenuItem menuItem, int index)
-    {
-        if (menuItem.Values == null)
+        if (item.Values is null || item.Values.Count == 0)
             return "";
 
-        var menuValue = menuItem.Values[index];
+        var currentIndex = item.SelectedValue?.Index ?? 0;
+        var selectedLength = item.Values[currentIndex].Value.Length;
+        var remainingChars = menu.Options._availableChars - selectedLength;
 
-        if (menuItem.Type != MenuItemType.ChoiceBool)
-            return menuValue.ToString();
+        if (item.Head is not null)
+            remainingChars -= item.Head.Value.Length;
 
-        menuValue.Prefix = menuItem.Data[index] == 0 ? menu.Bool[(int)MenuBool.False].Prefix : menu.Bool[(int)MenuBool.True].Prefix;
-        menuValue.Suffix = menuItem.Data[index] == 0 ? menu.Bool[(int)MenuBool.False].Suffix : menu.Bool[(int)MenuBool.True].Suffix;
+        if (item.Tail is not null)
+            remainingChars -= item.Tail.Value.Length;
 
-        return menuValue.ToString();
+        var splitChars = remainingChars / 2 < 1 ? 1 : remainingChars / 2;
+        var prevIndex = (currentIndex == 0) ? item.Values.Count - 1 : currentIndex - 1;
+        var nextIndex = (currentIndex == item.Values.Count - 1) ? 0 : currentIndex + 1;
+
+        TrimValue(item.Values[prevIndex], splitChars);
+        TrimValue(item.Values[nextIndex], splitChars);
+        TrimValue(item.Values[currentIndex], remainingChars + selectedLength - (splitChars * 2) + 1);
+
+        if (item.Options.Pinwheel)
+            return $"{item.Values[prevIndex]} {FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)} {item.Values[nextIndex]}";
+
+        var html = "";
+
+        if (currentIndex == 0)
+        {
+            html += $"{FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)}";
+
+            for (var i = 0; i < 2 && i < item.Values.Count - 1; i++)
+            {
+                TrimValue(item.Values[i + 1], splitChars);
+                html += $" {item.Values[i + 1]}";
+            }
+        }
+        else if (currentIndex == item.Values.Count - 1)
+        {
+            for (var i = 2; i > 0 && currentIndex - i >= 0; i--)
+            {
+                TrimValue(item.Values[currentIndex - i], splitChars);
+                html += $"{item.Values[currentIndex - i]} ";
+            }
+
+            html += $"{FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)}";
+        }
+        else
+            html += $"{item.Values[prevIndex]} {FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)} {item.Values[nextIndex]}";
+
+        return html;
     }
 
-    private static string FormatSelector(MenuBase menu, MenuItem menuItem, MenuItem selectedItem, MenuCursor selector)
+    private static string FormatSelector(MenuBase menu, MenuItem item, int index)
     {
-        if (menuItem.Type is MenuItemType.Button or MenuItemType.ChoiceBool && menuItem != selectedItem)
+        if (item.Type is (MenuItemType.Button or MenuItemType.ChoiceBool) && item != menu.SelectedItem?.Item)
             return "";
 
-        return menu.Selector[(int)selector].ToString();
+        return menu.Options.Selector[index].ToString();
     }
 
-    private static string FormatSlider(MenuBase menu, MenuItem menuItem)
+    private static void TrimValue(MenuValue value, int maxChars)
     {
-        var html = "";
-
-        html += menu.Slider[(int)MenuSlider.Left].ToString();
-
-        for (var i = 0; i < 11; i++)
-            html += $"{(i == menuItem.Data[0] ? menu.Slider[(int)MenuSlider.Selected] : menu.Slider[(int)MenuSlider.Spacer])}{(i != 10 ? " " : "")}";
-
-        html += menu.Slider[(int)MenuSlider.Right].ToString();
-
-        return html;
-    }
-
-    private static string FormatInput(MenuBase menu, MenuItem menuItem, MenuItem selectedItem)
-    {
-        var html = "";
-
-        if (menu.AcceptInput && menuItem == selectedItem)
-            html += menu.Selector[(int)MenuCursor.Left].ToString();
-
-        if (menuItem.DataString.Length == 0)
-            html += menu.Input.Value;
+        if (value.Value.Length == 1 || value.Value.Length < maxChars)
+            value.Display = value.Value;
+        else if (maxChars < 1)
+            value.Display = ".";
         else
-            html += $"{menu.Input.Prefix}{menuItem.DataString}{menu.Input.Suffix}";
-
-        if (menu.AcceptInput && menuItem == selectedItem)
-            html += menu.Selector[(int)MenuCursor.Right].ToString();
-
-        return html;
-    }
-
-    private static string FormatBool(MenuBase menu, MenuItem menuItem)
-    {
-        return menuItem.Data[0] == 0 ? menu.Bool[(int)MenuBool.False].ToString() : menu.Bool[(int)MenuBool.True].ToString();
-    }
-
-    public void SetMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons, MenuBase, MenuItem?> callback)
-    {
-        if (!Menus.ContainsKey(controller))
-            Menus.Add(controller, new Stack<MenuBase>());
-
-        menu.Callback = callback;
-        Menus[controller].Clear();
-        Menus[controller].Push(menu);
-    }
-
-    public void AddMenu(CCSPlayerController controller, MenuBase menu, Action<MenuButtons, MenuBase, MenuItem?> callback)
-    {
-        if (!Menus.ContainsKey(controller))
-            Menus.Add(controller, new Stack<MenuBase>());
-
-        menu.Callback = callback;
-        Menus[controller].Push(menu);
-    }
-
-    public void ClearMenus(CCSPlayerController controller)
-    {
-        Menus.Remove(controller);
-    }
-
-    public void PopMenu(CCSPlayerController controller, MenuBase? menu = null)
-    {
-        if (!Menus.TryGetValue(controller, out var value))
-            return;
-
-        if (menu != null && value.Peek() != menu)
-            return;
-
-        value.Pop();
-    }
-
-    public bool IsCurrentMenu(CCSPlayerController controller, MenuBase menu)
-    {
-        if (!Menus.TryGetValue(controller, out var value))
-            return false;
-
-        return value.Peek() == menu;
+            value.Display = value.Value[..(maxChars - 1)] + ".";
     }
 }

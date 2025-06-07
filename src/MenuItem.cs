@@ -1,72 +1,53 @@
-﻿using Menu.Enums;
+﻿using CounterStrikeSharp.API.Core;
+using RMenu.Enums;
 
-namespace Menu;
+namespace RMenu;
 
-public class MenuItem
+public class MenuItem(MenuItemType type, MenuValue? head = null, List<MenuValue>? values = null, MenuValue? tail = null, MenuItemOptions? options = null, Action<CCSPlayerController, MenuAction, MenuItem>? callback = null)
 {
-    public MenuItemType Type { get; init; }
-    public bool Pinwheel { get; init; }
-    public MenuValue? Head { get; set; }
-    public MenuValue? Tail { get; set; }
-    public List<MenuValue>? Values { get; set; }
-    public int Option { get; set; } = 0;
-    public int[] Data { get; set; }
-    public string DataString { get; set; } = "";
+    public MenuItemOptions Options { get; init; } = options ?? new MenuItemOptions();
+    public MenuItemType Type { get; set; } = type;
+    public MenuValue? Head { get; set; } = head;
+    public MenuValue? Tail { get; set; } = tail;
+    public object? Data { get; set; } = null;
+    public List<MenuValue>? Values { get; set; } = values;
+    public Action<CCSPlayerController, MenuAction, MenuItem>? Callback { get; } = callback;
+    public (int Index, MenuValue Value)? SelectedValue { get; set; } = null;
 
-    public MenuItem(MenuItemType type, MenuValue head, List<MenuValue> values, MenuValue tail, bool pinwheel = false)
+    public bool Input(MenuButton button)
     {
-        Type = type;
-        Pinwheel = pinwheel;
-        Head = head;
-        Tail = tail;
-        Values = values;
-        Data = new int[values.ToList().Count];
-    }
+        if (Values is null || Values.Count == 0)
+            return false;
 
-    public MenuItem(MenuItemType type, MenuValue head, List<MenuValue> values, bool pinwheel = false)
-    {
-        Type = type;
-        Pinwheel = pinwheel;
-        Head = head;
-        Values = values;
-        Data = new int[values.ToList().Count];
-    }
+        SelectedValue ??= (0, Values[0]);
+        int newIndex = SelectedValue.Value.Index;
 
-    public MenuItem(MenuItemType type, List<MenuValue> values, MenuValue tail, bool pinwheel = false)
-    {
-        Type = type;
-        Pinwheel = pinwheel;
-        Tail = tail;
-        Values = values;
-        Data = new int[values.ToList().Count];
-    }
+        if (Type is (MenuItemType.Button or MenuItemType.Choice or MenuItemType.ChoiceBool))
+        {
+            switch (button)
+            {
+                case MenuButton.Left:
+                    if (Options.Pinwheel)
+                        newIndex = (newIndex - 1 + Values.Count) % Values.Count;
+                    else if (newIndex > 0)
+                        newIndex--;
 
-    public MenuItem(MenuItemType type, List<MenuValue> values, bool pinwheel = false)
-    {
-        Type = type;
-        Pinwheel = pinwheel;
-        Values = values;
-        Data = new int[values.ToList().Count];
-    }
+                    break;
 
-    public MenuItem(MenuItemType type, MenuValue head, MenuValue tail)
-    {
-        Type = type;
-        Head = head;
-        Tail = tail;
-        Data = new int[1];
-    }
+                case MenuButton.Right:
+                    if (Options.Pinwheel)
+                        newIndex = (newIndex + 1) % Values.Count;
+                    else if (newIndex < Values.Count - 1)
+                        newIndex++;
 
-    public MenuItem(MenuItemType type, MenuValue head)
-    {
-        Type = type;
-        Head = head;
-        Data = new int[1];
-    }
+                    break;
+            }
+        }
 
-    public MenuItem(MenuItemType type)
-    {
-        Type = type;
-        Data = new int[1];
+        if (newIndex == SelectedValue.Value.Index)
+            return false;
+
+        SelectedValue = (newIndex, Values[newIndex]);
+        return true;
     }
 }
