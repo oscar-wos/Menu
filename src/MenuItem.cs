@@ -1,8 +1,9 @@
-﻿using RMenu.Enums;
+﻿using CounterStrikeSharp.API.Core;
+using RMenu.Enums;
 
 namespace RMenu;
 
-public class MenuItem(MenuItemType type, MenuValue? head = null, List<MenuValue>? values = null, MenuValue? tail = null, MenuItemOptions? options = null)
+public class MenuItem(MenuItemType type, MenuValue? head = null, List<MenuValue>? values = null, MenuValue? tail = null, MenuItemOptions? options = null, Action<CCSPlayerController, MenuAction, MenuItem>? callback = null)
 {
     public MenuItemOptions Options { get; init; } = options ?? new MenuItemOptions();
     public MenuItemType Type { get; set; } = type;
@@ -10,6 +11,7 @@ public class MenuItem(MenuItemType type, MenuValue? head = null, List<MenuValue>
     public MenuValue? Tail { get; set; } = tail;
     public object? Data { get; set; } = null;
     public List<MenuValue>? Values { get; set; } = values;
+    public Action<CCSPlayerController, MenuAction, MenuItem>? Callback { get; } = callback;
     public (int Index, MenuValue Value)? SelectedValue { get; set; } = null;
 
     public bool Input(MenuButton button)

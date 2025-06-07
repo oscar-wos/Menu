@@ -5,7 +5,7 @@ namespace RMenu;
 
 public static partial class Menu
 {
-    public static void Add(CCSPlayerController player, MenuBase menu, Action<CCSPlayerController, MenuBase, MenuAction, MenuItem?> callback)
+    public static void Add(CCSPlayerController player, MenuBase menu, Action<CCSPlayerController, MenuBase, MenuAction>? callback = null)
     {
         menu.Callback = callback;
 
@@ -20,11 +20,40 @@ public static partial class Menu
 
         if (!_menus.TryAdd(player, [new([menu])]))
         {
-            // Priorities
+            var currentMenu = Get(player);
+
+            if (currentMenu is not null && (menu.Options.Priority >= currentMenu.Options.Priority || currentMenu.Options.Exitable == false))
+                _menus[player].Insert(0, new([menu]));
+            else
+                _menus[player].Add(new([menu]));
         }
     }
 
     public static void Clear(CCSPlayerController player)
+    {
+        if (!_menus.TryGetValue(player, out var menus) || menus.Count == 0)
+            return;
+
+        for (var i = menus.Count; i > 0; i--)
+        {
+            var menuStack = menus[i - 1];
+
+            if (menuStack.Count == 0)
+                continue;
+
+            var currentMenu = menuStack.Peek();
+
+            if (currentMenu.Options.Exitable)
+            {
+                menuStack.Clear();
+                _menus[player].RemoveAt(_menus[player].IndexOf(menuStack));
+            }
+        }
+
+        _currentMenu.Remove(player, out _);
+    }
+
+    internal static void Remove(CCSPlayerController player)
     {
         _menus.Remove(player, out _);
         _currentMenu.Remove(player, out _);

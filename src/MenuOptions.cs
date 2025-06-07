@@ -55,10 +55,10 @@ public class MenuOptions
     public bool ProcessInput { get; set; } = true;
     public int ButtonsDelay { get; set; } = 150;
     public bool DisplayItemsInHeader { get; set; } = true;
-    //TODO
     public bool Exitable { get; set; } = true;
-    public bool BlockJump { get; set; } = false;
     public int Priority { get; set; } = 0;
+    //TODO
+    public bool BlockJump { get; set; } = false;
     public int Timeout { get; set; } = 0;
 
     public string HeaderSizeHtml() => _headerString;

@@ -13,9 +13,8 @@ public static partial class Menu
     internal const int MENU_LENGTH = 300;
     internal static readonly ConcurrentDictionary<CCSPlayerController, List<Stack<MenuBase>>> _menus = [];
     internal static readonly Dictionary<CCSPlayerController, (MenuBase, string)> _currentMenu = [];
-    
     private static readonly Timer _menuTimer = new(ProcessMenu, null, 0, 100);
-    
+
     public static event EventHandler<MenuEvent>? OnPrintMenuPre;
 
     static Menu()
@@ -170,13 +169,10 @@ public static partial class Menu
         }
         else if (currentIndex == item.Values.Count - 1)
         {
-            for (var i = 2; i > 0; i--)
+            for (var i = 2; i > 0 && currentIndex - i >= 0; i--)
             {
-                if (currentIndex - i >= 0)
-                {
-                    TrimValue(item.Values[currentIndex - i], splitChars);
-                    html += $"{item.Values[currentIndex - i]} ";
-                }
+                TrimValue(item.Values[currentIndex - i], splitChars);
+                html += $"{item.Values[currentIndex - i]} ";
             }
 
             html += $"{FormatSelector(menu, item, 0)}{item.Values[currentIndex]}{FormatSelector(menu, item, 1)}";

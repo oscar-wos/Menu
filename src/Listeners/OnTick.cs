@@ -15,8 +15,7 @@ internal static class OnTickListener
         {
             if (player.Connected != PlayerConnectedState.PlayerConnected)
             {
-                Menu._menus.Remove(player, out _);
-                Menu._currentMenu.Remove(player, out _);
+                Menu.Remove(player);
                 continue;
             }
 

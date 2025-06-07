@@ -9,7 +9,7 @@ public class MenuBase
     public MenuOptions Options { get; init; }
     public List<MenuValue>? Header { get; set; }
     public List<MenuValue>? Footer { get; set; }
-    public Action<CCSPlayerController, MenuBase, MenuAction, MenuItem?>? Callback { get; set; }
+    public Action<CCSPlayerController, MenuBase, MenuAction>? Callback { get; set; }
     public List<MenuItem> Items { get; set; } = [];
     public (int Index, MenuItem Item)? SelectedItem { get; set; } = null;
     public bool Text { get; set; } = false;
@@ -25,6 +25,11 @@ public class MenuBase
     {
         Header = header?.ToList();
         Footer = footer?.ToList();
+        Options = options ?? new MenuOptions();
+    }
+
+    public MenuBase(MenuOptions? options = null)
+    {
         Options = options ?? new MenuOptions();
     }
 
@@ -49,6 +54,10 @@ public class MenuBase
     {
         switch (button)
         {
+            case MenuButton.Assist:
+                Callback?.Invoke(player, this, MenuAction.Assist);
+                break;
+
             case MenuButton.Up when !Text:
                 if (SelectedItem is null)
                     return;
@@ -57,7 +66,7 @@ public class MenuBase
                 {
                     if (SelectItem(newIndex))
                     {
-                        Callback?.Invoke(player, this, MenuAction.Update, SelectedItem.Value.Item);
+                        Callback?.Invoke(player, this, MenuAction.Update);
                         break;
                     }
                 }
@@ -72,7 +81,7 @@ public class MenuBase
                 {
                     if (SelectItem(newIndex))
                     {
-                        Callback?.Invoke(player, this, MenuAction.Update, SelectedItem.Value.Item);
+                        Callback?.Invoke(player, this, MenuAction.Update);
                         break;
                     }
                 }
@@ -84,7 +93,7 @@ public class MenuBase
                     return;
 
                 if (SelectedItem.Value.Item.Input(button))
-                    Callback?.Invoke(player, this, MenuAction.Update, SelectedItem.Value.Item);
+                    Callback?.Invoke(player, this, MenuAction.Update);
 
                 break;
 
@@ -92,34 +101,14 @@ public class MenuBase
                 if (SelectedItem is null)
                     return;
 
-                Callback?.Invoke(player, this, MenuAction.Select, SelectedItem.Value.Item);
+                Callback?.Invoke(player, this, MenuAction.Select);
                 break;
 
-            case MenuButton.Exit:
-                Callback?.Invoke(player, this, MenuAction.Cancel, null);
+            case MenuButton.Exit when Options.Exitable:
+                Callback?.Invoke(player, this, MenuAction.Cancel);
                 Menu.Clear(player);
                 break;
         }
-
-
-
-        /*
-         * Up,
-    Down,
-    Left,
-    Right,
-    Select,
-    Back,
-    Exit,
-    Assist
-        switch (button)
-        {
-            case MenuButton.Exit:
-                Callback?.Invoke(player, this, MenuAction.Cancel, null);
-                Menu.Clear(player);
-                break;
-        }
-        */
     }
 
     public void AddItem(MenuItem item)
