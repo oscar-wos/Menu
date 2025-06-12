@@ -13,7 +13,7 @@ internal static class OnTickListener
     {
         foreach (var (player, (menu, menuString)) in Menu._currentMenu)
         {
-            if (player.Connected != PlayerConnectedState.PlayerConnected)
+            if (!player.IsValid || player.Connected != PlayerConnectedState.PlayerConnected)
             {
                 Menu.Remove(player);
                 continue;

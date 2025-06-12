@@ -2,12 +2,13 @@
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using RMenu.Enums;
 using RMenu.Structs;
+using System.Runtime.InteropServices;
 
 namespace RMenu.Hooks;
 
 internal static class RunCommandHook
 {
-    private static readonly MemoryFunctionVoid<CPlayer_MovementServices, IntPtr> _runCommand = new("40 53 56 57 48 81 EC 80 00 00 00 0F");
+    private static readonly MemoryFunctionVoid<CPlayer_MovementServices, IntPtr> _runCommand = new(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "55 48 89 E5 41 57 49 89 FF 41 56 48 8D 55" : "40 53 56 57 48 81 EC 80 00 00 00 0F");
 
     public static void Register()
     {
