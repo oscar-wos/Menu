@@ -1,4 +1,4 @@
-﻿namespace RMenu.Enums;
+namespace RMenu.Enums;
 
 public enum MenuFontSize
 {
@@ -10,5 +10,5 @@ public enum MenuFontSize
     L = 24,
     XL = 32,
     XXL = 40,
-    XXXL = 64
+    XXXL = 64,
 }

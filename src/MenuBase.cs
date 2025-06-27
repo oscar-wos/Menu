@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core;
 using RMenu.Enums;
 
 namespace RMenu;
@@ -21,34 +21,29 @@ public class MenuBase
         Options = options ?? new MenuOptions();
     }
 
-    public MenuBase(IEnumerable<MenuValue>? header = null, IEnumerable<MenuValue>? footer = null, MenuOptions? options = null)
+    public MenuBase(
+        IEnumerable<MenuValue>? header = null,
+        IEnumerable<MenuValue>? footer = null,
+        MenuOptions? options = null
+    )
     {
         Header = header?.ToList();
         Footer = footer?.ToList();
         Options = options ?? new MenuOptions();
     }
 
-    public MenuBase(MenuOptions? options = null)
-    {
-        Options = options ?? new MenuOptions();
-    }
+    public MenuBase(MenuOptions? options = null) => Options = options ?? new MenuOptions();
 
-    public MenuBase()
-    {
-        Options = new MenuOptions();
-    }
+    public MenuBase() => Options = new MenuOptions();
 
-    public static bool IsSelectable(MenuItem item)
-    {
-        return item.Type == MenuItemType.Choice ||
-               item.Type == MenuItemType.Button ||
-               item.Type == MenuItemType.Bool ||
-               item.Type == MenuItemType.ChoiceBool ||
-               item.Type == MenuItemType.Slider ||
-               item.Type == MenuItemType.Input;
-    }
-
-    private bool SelectItem(int index) => IsSelectable(Items[index]) && (SelectedItem = (index, Items[index])) != null;
+    public static bool IsSelectable(MenuItem item) =>
+        item.Type
+            is MenuItemType.Choice
+                or MenuItemType.Button
+                or MenuItemType.Bool
+                or MenuItemType.ChoiceBool
+                or MenuItemType.Slider
+                or MenuItemType.Input;
 
     public void Input(CCSPlayerController player, MenuButton button)
     {
@@ -60,11 +55,13 @@ public class MenuBase
 
             case MenuButton.Up when !Text:
                 if (SelectedItem is null)
-                    return;
-
-                for (int newIndex = SelectedItem.Value.Index - 1; newIndex >= 0; newIndex--)
                 {
-                    if (SelectItem(newIndex))
+                    return;
+                }
+
+                for (int newIdx = SelectedItem.Value.Index - 1; newIdx >= 0; newIdx--)
+                {
+                    if (SelectItem(newIdx))
                     {
                         Callback?.Invoke(player, this, MenuAction.Update);
                         break;
@@ -75,11 +72,13 @@ public class MenuBase
 
             case MenuButton.Down when !Text:
                 if (SelectedItem is null)
-                    return;
-
-                for (int newIndex = SelectedItem.Value.Index + 1; newIndex < Items.Count; newIndex++)
                 {
-                    if (SelectItem(newIndex))
+                    return;
+                }
+
+                for (int newIdx = SelectedItem.Value.Index + 1; newIdx < Items.Count; newIdx++)
+                {
+                    if (SelectItem(newIdx))
                     {
                         Callback?.Invoke(player, this, MenuAction.Update);
                         break;
@@ -88,18 +87,25 @@ public class MenuBase
 
                 break;
 
-            case MenuButton.Left or MenuButton.Right when !Text:
+            case MenuButton.Left
+            or MenuButton.Right when !Text:
                 if (SelectedItem is null)
+                {
                     return;
+                }
 
                 if (SelectedItem.Value.Item.Input(button))
+                {
                     Callback?.Invoke(player, this, MenuAction.Update);
+                }
 
                 break;
 
             case MenuButton.Select when !Text:
                 if (SelectedItem is null)
+                {
                     return;
+                }
 
                 Callback?.Invoke(player, this, MenuAction.Select);
                 break;
@@ -111,8 +117,8 @@ public class MenuBase
         }
     }
 
-    public void AddItem(MenuItem item)
-    {
-        Items.Add(item);
-    }
+    public void AddItem(MenuItem item) => Items.Add(item);
+
+    private bool SelectItem(int index) =>
+        IsSelectable(Items[index]) && (SelectedItem = (index, Items[index])) != null;
 }

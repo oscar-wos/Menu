@@ -1,9 +1,10 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using RMenu.Enums;
 
 namespace RMenu;
 
-public class MenuInput<T> where T : struct, Enum
+public class MenuInput<T>
+    where T : struct, Enum
 {
     private readonly ulong[] _values;
 
@@ -23,7 +24,7 @@ public class MenuInput<T> where T : struct, Enum
                 MenuButton.Back => (ulong)PlayerButtons.Walk,
                 MenuButton.Exit => (ulong)PlayerButtons.Scoreboard,
                 MenuButton.Assist => (ulong)PlayerButtons.Inspect,
-                _ => 0
+                _ => 0,
             };
         }
     }

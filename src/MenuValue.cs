@@ -1,11 +1,16 @@
-﻿using CounterStrikeSharp.API.Core;
+using System.Drawing;
+using CounterStrikeSharp.API.Core;
 using RMenu.Enums;
 using RMenu.Helpers;
-using System.Drawing;
 
 namespace RMenu;
 
-public class MenuValue(string value, Color? color = null, object? data = null, Action<CCSPlayerController, MenuAction, MenuValue>? callback = null)
+public class MenuValue(
+    string value,
+    Color? color = null,
+    object? data = null,
+    Action<CCSPlayerController, MenuAction, MenuValue>? callback = null
+)
 {
     internal string Display { get; set; } = value;
     public string Value { get; set; } = value;
@@ -17,24 +22,22 @@ public class MenuValue(string value, Color? color = null, object? data = null, A
 
     public override string ToString()
     {
-        var usedColor = Color;
-        int rgb = (usedColor.R << 16) | (usedColor.G << 8) | usedColor.B;
+        Color usedColor = Color;
 
-        if (rgb == 0x010000)
-            return "";
-
-        if (rgb == 0x000100)
-            return "";
-
-        if (rgb == 0x000001)
-            return Rainbow.ApplyStrobeEffect(Display, usedColor.A, true);
-
-        if (rgb == 0x000000)
+        switch (usedColor.A)
         {
-            if (usedColor.A != 0)
-                return Rainbow.ApplyStrobeEffect(Display, usedColor.A, false);
+            case 0:
+                usedColor = Rainbow.CurrentColor;
+                break;
 
-            usedColor = Rainbow.CurrentColor;
+            case 1:
+                return Rainbow.ApplyStrobeEffect(Display, usedColor.R, false);
+
+            case 2:
+                return Rainbow.ApplyStrobeEffect(Display, usedColor.R, true);
+
+            default:
+                break;
         }
 
         return $"<font color=\"#{usedColor.R:X2}{usedColor.G:X2}{usedColor.B:X2}\">{Display}</font>";

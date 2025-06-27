@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 
 namespace RMenu.Helpers;
@@ -15,8 +15,8 @@ public static class GameRules
     public static void OnTick()
     {
         if (_gameRules is null)
+        {
             return;
-
-        Console.WriteLine(_gameRules?.WarmupPeriod);
+        }
     }
 }
