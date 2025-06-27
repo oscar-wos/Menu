@@ -1,4 +1,4 @@
-﻿namespace RMenu;
+namespace RMenu;
 
 public class MenuItemOptions
 {

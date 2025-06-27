@@ -1,4 +1,4 @@
-﻿namespace RMenu.Enums;
+namespace RMenu.Enums;
 
 public enum MenuButton
 {
@@ -9,5 +9,5 @@ public enum MenuButton
     Select,
     Back,
     Exit,
-    Assist
+    Assist,
 }

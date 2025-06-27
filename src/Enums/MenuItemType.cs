@@ -1,4 +1,4 @@
-﻿namespace RMenu.Enums;
+namespace RMenu.Enums;
 
 public enum MenuItemType
 {
@@ -9,5 +9,5 @@ public enum MenuItemType
     Bool,
     ChoiceBool,
     Slider,
-    Input
+    Input,
 }

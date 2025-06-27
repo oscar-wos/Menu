@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Text;
 
 namespace RMenu.Helpers;
@@ -10,39 +10,44 @@ internal static class Rainbow
 
     private static readonly Color[] _hue;
     private static double _currentHue;
-    private static Color _currentColor;
+
+    public static Color CurrentColor { get; private set; }
 
     static Rainbow()
     {
         _hue = new Color[HUE_MAX];
 
         for (int i = 0; i < HUE_MAX; i++)
+        {
             _hue[i] = ComputeColor(i);
+        }
     }
-
-    public static Color CurrentColor => _currentColor;
 
     public static void UpdateRainbowHue()
     {
         _currentHue = (_currentHue + HUE_INCREMENT + HUE_MAX) % HUE_MAX;
-        _currentColor = GetColorFromHue(_currentHue);
+        CurrentColor = GetColorFromHue(_currentHue);
     }
 
     public static string ApplyStrobeEffect(string input, byte hueDelta, bool isReversed = false)
     {
-        var step = input.Length > 1 ? hueDelta / (input.Length - 1) : hueDelta;
-        var sb = new StringBuilder(input.Length * 37);
+        int step = input.Length > 1 ? hueDelta / (input.Length - 1) : hueDelta;
+        StringBuilder sb = new(input.Length * 37);
 
         if (isReversed)
+        {
             step = -step;
-        
+        }
+
         for (int i = 0; i < input.Length; i++)
         {
-            var offset = hueDelta - i * step;
-            var hue = (_currentHue + offset + HUE_MAX) % HUE_MAX;
+            int offset = hueDelta - (i * step);
+            double hue = (_currentHue + offset + HUE_MAX) % HUE_MAX;
 
-            var color = GetColorFromHue(hue);
-            sb.Append($"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\">{input[i]}</font>");
+            Color color = GetColorFromHue(hue);
+            _ = sb.Append(
+                $"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\">{input[i]}</font>"
+            );
         }
 
         return sb.ToString();
@@ -50,15 +55,15 @@ internal static class Rainbow
 
     private static Color ComputeColor(double hue)
     {
-        var h = hue / 60.0;
-        var segment = (int)h;
-        var fraction = h - segment;
+        double h = hue / 60.0;
+        int segment = (int)h;
+        double fraction = h - segment;
         segment %= 6;
 
-        var v = 255;
-        var p = 0;
-        var q = (int)(v * (1.0 - fraction) + 0.5);
-        var t = (int)(v * fraction + 0.5);
+        int v = 255;
+        int p = 0;
+        int q = (int)((v * (1.0 - fraction)) + 0.5);
+        int t = (int)((v * fraction) + 0.5);
 
         return segment switch
         {
@@ -67,12 +72,9 @@ internal static class Rainbow
             2 => Color.FromArgb(p, v, t),
             3 => Color.FromArgb(p, q, v),
             4 => Color.FromArgb(t, p, v),
-            _ => Color.FromArgb(v, p, q)
+            _ => Color.FromArgb(v, p, q),
         };
     }
 
-    private static Color GetColorFromHue(double hue)
-    {
-        return _hue[((int)hue + HUE_MAX) % HUE_MAX];
-    }
+    private static Color GetColorFromHue(double hue) => _hue[((int)hue + HUE_MAX) % HUE_MAX];
 }

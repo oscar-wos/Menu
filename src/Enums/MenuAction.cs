@@ -1,4 +1,4 @@
-﻿namespace RMenu.Enums;
+namespace RMenu.Enums;
 
 public enum MenuAction
 {
@@ -7,5 +7,5 @@ public enum MenuAction
     Update,
     Input,
     Cancel,
-    Assist
+    Assist,
 }

@@ -1,9 +1,16 @@
-﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core;
 using RMenu.Enums;
 
 namespace RMenu;
 
-public class MenuItem(MenuItemType type, MenuValue? head = null, List<MenuValue>? values = null, MenuValue? tail = null, MenuItemOptions? options = null, Action<CCSPlayerController, MenuAction, MenuItem>? callback = null)
+public class MenuItem(
+    MenuItemType type,
+    MenuValue? head = null,
+    List<MenuValue>? values = null,
+    MenuValue? tail = null,
+    MenuItemOptions? options = null,
+    Action<CCSPlayerController, MenuAction, MenuItem>? callback = null
+)
 {
     public MenuItemOptions Options { get; init; } = options ?? new MenuItemOptions();
     public MenuItemType Type { get; set; } = type;
@@ -17,37 +24,49 @@ public class MenuItem(MenuItemType type, MenuValue? head = null, List<MenuValue>
     public bool Input(MenuButton button)
     {
         if (Values is null || Values.Count == 0)
+        {
             return false;
+        }
 
         SelectedValue ??= (0, Values[0]);
-        int newIndex = SelectedValue.Value.Index;
+        int newIdx = SelectedValue.Value.Index;
 
-        if (Type is (MenuItemType.Button or MenuItemType.Choice or MenuItemType.ChoiceBool))
+        if (Type is MenuItemType.Button or MenuItemType.Choice or MenuItemType.ChoiceBool)
         {
             switch (button)
             {
                 case MenuButton.Left:
                     if (Options.Pinwheel)
-                        newIndex = (newIndex - 1 + Values.Count) % Values.Count;
-                    else if (newIndex > 0)
-                        newIndex--;
+                    {
+                        newIdx = (newIdx - 1 + Values.Count) % Values.Count;
+                    }
+                    else if (newIdx > 0)
+                    {
+                        newIdx--;
+                    }
 
                     break;
 
                 case MenuButton.Right:
                     if (Options.Pinwheel)
-                        newIndex = (newIndex + 1) % Values.Count;
-                    else if (newIndex < Values.Count - 1)
-                        newIndex++;
+                    {
+                        newIdx = (newIdx + 1) % Values.Count;
+                    }
+                    else if (newIdx < Values.Count - 1)
+                    {
+                        newIdx++;
+                    }
 
                     break;
             }
         }
 
-        if (newIndex == SelectedValue.Value.Index)
+        if (newIdx == SelectedValue.Value.Index)
+        {
             return false;
+        }
 
-        SelectedValue = (newIndex, Values[newIndex]);
+        SelectedValue = (newIdx, Values[newIdx]);
         return true;
     }
 }

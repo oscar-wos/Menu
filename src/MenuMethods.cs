@@ -1,11 +1,15 @@
-﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core;
 using RMenu.Enums;
 
 namespace RMenu;
 
 public static partial class Menu
 {
-    public static void Add(CCSPlayerController player, MenuBase menu, Action<CCSPlayerController, MenuBase, MenuAction>? callback = null)
+    public static void Add(
+        CCSPlayerController player,
+        MenuBase menu,
+        Action<CCSPlayerController, MenuBase, MenuAction>? callback = null
+    )
     {
         menu.Callback = callback;
 
@@ -18,60 +22,60 @@ public static partial class Menu
             }
         }
 
-        if (!_menus.TryAdd(player, [new([menu])]))
+        if (!_menus.TryAdd(player, [menu]))
         {
-            var currentMenu = Get(player);
-
-            if (currentMenu is not null && (menu.Options.Priority >= currentMenu.Options.Priority || currentMenu.Options.Exitable == false))
-                _menus[player].Insert(0, new([menu]));
+            if (
+                Get(player) is MenuBase { Options: { } options }
+                && (menu.Options.Priority >= options.Priority || options.Exitable == false)
+            )
+            {
+                _menus[player].Insert(0, menu);
+            }
             else
-                _menus[player].Add(new([menu]));
+            {
+                _menus[player].Add(menu);
+            }
         }
     }
 
     public static void Clear(CCSPlayerController player)
     {
-        if (!_menus.TryGetValue(player, out var menus) || menus.Count == 0)
-            return;
-
-        for (var i = menus.Count; i > 0; i--)
+        if (!_menus.TryGetValue(player, out List<MenuBase>? menus) || menus.Count == 0)
         {
-            var menuStack = menus[i - 1];
+            return;
+        }
 
-            if (menuStack.Count == 0)
-                continue;
+        for (int i = menus.Count; i > 0; i--)
+        {
+            MenuBase menu = menus[i - 1];
 
-            var currentMenu = menuStack.Peek();
-
-            if (currentMenu.Options.Exitable)
+            if (menu.Options.Exitable)
             {
-                menuStack.Clear();
-                _menus[player].RemoveAt(_menus[player].IndexOf(menuStack));
+                _menus[player].RemoveAt(i - 1);
             }
         }
 
-        _currentMenu.Remove(player, out _);
+        _ = _currentMenu.Remove(player, out _);
     }
 
-    internal static void Remove(CCSPlayerController player)
+    public static void Remove(CCSPlayerController player)
     {
-        _menus.Remove(player, out _);
-        _currentMenu.Remove(player, out _);
+        _ = _menus.Remove(player, out _);
+        _ = _currentMenu.Remove(player, out _);
     }
 
     public static MenuBase? Get(CCSPlayerController player)
     {
-        if (!_menus.TryGetValue(player, out var menus))
+        if (!_menus.TryGetValue(player, out List<MenuBase>? menus))
+        {
             return null;
+        }
 
         if (menus.Count == 0)
+        {
             return null;
+        }
 
-        var currentMenuStack = menus.ElementAt(0);
-
-        if (currentMenuStack.Count == 0)
-            return null;
-
-        return currentMenuStack.Peek();
+        return menus[0];
     }
 }
