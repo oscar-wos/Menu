@@ -15,10 +15,14 @@ public static partial class Menu
 
         for (int i = 0; i < menu.Items.Count; i++)
         {
-            if (MenuBase.IsSelectable(menu.Items[i]))
+            if (menu.Items[i]?.Values?[0] is MenuValue value && menu.Items[i].SelectedValue is null)
+            {
+                menu.Items[i].SelectedValue = (0, value);
+            }
+
+            if (MenuBase.IsSelectable(menu.Items[i]) && menu.SelectedItem is null)
             {
                 menu.SelectedItem = (i, menu.Items[i]);
-                break;
             }
         }
 
@@ -36,6 +40,8 @@ public static partial class Menu
                 _menus[player].Add(menu);
             }
         }
+
+        menu.Callback?.Invoke(player, menu, MenuAction.Start);
     }
 
     public static void Clear(CCSPlayerController player)

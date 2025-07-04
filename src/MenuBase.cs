@@ -9,9 +9,9 @@ public class MenuBase
     public MenuOptions Options { get; init; }
     public List<MenuValue>? Header { get; set; }
     public List<MenuValue>? Footer { get; set; }
-    public Action<CCSPlayerController, MenuBase, MenuAction>? Callback { get; set; }
     public List<MenuItem> Items { get; set; } = [];
     public (int Index, MenuItem Item)? SelectedItem { get; set; } = null;
+    public Action<CCSPlayerController, MenuBase, MenuAction>? Callback { get; set; }
     public bool Text { get; set; } = false;
 
     public MenuBase(MenuValue? header = null, MenuValue? footer = null, MenuOptions? options = null)
@@ -59,9 +59,9 @@ public class MenuBase
                     return;
                 }
 
-                for (int newIdx = SelectedItem.Value.Index - 1; newIdx >= 0; newIdx--)
+                for (int newIndex = SelectedItem.Value.Index - 1; newIndex >= 0; newIndex--)
                 {
-                    if (SelectItem(newIdx))
+                    if (SelectItem(newIndex))
                     {
                         Callback?.Invoke(player, this, MenuAction.Update);
                         break;
@@ -76,9 +76,9 @@ public class MenuBase
                     return;
                 }
 
-                for (int newIdx = SelectedItem.Value.Index + 1; newIdx < Items.Count; newIdx++)
+                for (int newIndex = SelectedItem.Value.Index + 1; newIndex < Items.Count; newIndex++)
                 {
-                    if (SelectItem(newIdx))
+                    if (SelectItem(newIndex))
                     {
                         Callback?.Invoke(player, this, MenuAction.Update);
                         break;
@@ -117,6 +117,7 @@ public class MenuBase
         }
     }
 
+    [Obsolete("Use MenuBase.Items.Add() (List<MenuItem>)")]
     public void AddItem(MenuItem item) => Items.Add(item);
 
     private bool SelectItem(int index) =>
