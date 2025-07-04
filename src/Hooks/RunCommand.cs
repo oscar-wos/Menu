@@ -14,6 +14,8 @@ internal static class RunCommandHook
             : "40 53 56 57 48 81 EC 80 00 00 00 0F"
     );
 
+    private static readonly MenuButton[] _menuButtons = Enum.GetValues<MenuButton>();
+
     public static void Register() => _runCommand.Hook(RunCommandPre, HookMode.Pre);
 
     private static unsafe HookResult RunCommandPre(DynamicHook h)
@@ -43,19 +45,17 @@ internal static class RunCommandHook
 
         ulong buttons = userCmd->ButtonState.PressedButtons | userCmd->ButtonState.ScrollButtons;
 
-        foreach (MenuButton button in Enum.GetValues(typeof(MenuButton)))
+        for (int i = 0; i < _menuButtons.Length; i++)
         {
-            if ((buttons & menu.Options.Buttons[button]) == menu.Options.Buttons[button])
-            {
-                if (
-                    menu.InputDelay[(int)button] + menu.Options.ButtonsDelay
-                    > Environment.TickCount64
-                )
-                {
-                    continue;
-                }
+            MenuButton button = _menuButtons[i];
+            ulong buttonMask = menu.Options.Buttons[button];
 
-                menu.InputDelay[(int)button] = Environment.TickCount64;
+            if (
+                (buttons & buttonMask) == buttonMask
+                && menu.InputDelay[i] + menu.Options.ButtonsDelay <= Environment.TickCount64
+            )
+            {
+                menu.InputDelay[i] = Environment.TickCount64;
                 menu.Input(player, button);
             }
         }

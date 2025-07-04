@@ -49,12 +49,11 @@ public class MenuOptions
 
     public MenuInput<MenuButton> Buttons { get; set; } = new();
     public bool BlockMovement { get; set; } = false;
-    public bool ProcessInput { get; set; } = true;
     public int ButtonsDelay { get; set; } = 150;
     public bool DisplayItemsInHeader { get; set; } = true;
     public bool Exitable { get; set; } = true;
     public int Priority { get; set; } = 0;
-
+    public bool ProcessInput { get; set; } = true;
     //TODO
     public bool BlockJump { get; set; } = false;
     public int Timeout { get; set; } = 0;
@@ -86,10 +85,4 @@ public class MenuOptions
         new("[ ", new Color().Rainbow()),
         new(" ]", new Color().Rainbow()),
     ];
-
-    public MenuValue[] Bool = [new("✘", Color.Red), new("✔", Color.Green)];
-
-    public MenuValue[] Slider = [new("("), new(")"), new("-"), new("|")];
-
-    public MenuValue Input = new("________", Color.White);
 }
