@@ -10,8 +10,8 @@ internal static class RunCommandHook
 {
     private static readonly MemoryFunctionVoid<CPlayer_MovementServices, IntPtr> _runCommand = new(
         RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-            ? "55 48 89 E5 41 57 49 89 FF 41 56 48 8D 55"
-            : "40 53 56 57 48 81 EC 80 00 00 00 0F"
+            ? "55 48 89 E5 41 57 49 89 FF 41 56 41 55 49 89 F5 41 54 53 48 83 EC ?? 48 8B 7F"
+            : "48 89 5C 24 20 55 56 57 41 54 41 55 41 56 41 57 48 83 EC 20"
     );
 
     private static readonly MenuButton[] _menuButtons = Enum.GetValues<MenuButton>();
