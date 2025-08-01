@@ -54,6 +54,7 @@ public class MenuOptions
     public bool Exitable { get; set; } = true;
     public int Priority { get; set; } = 0;
     public bool ProcessInput { get; set; } = true;
+
     //TODO
     public bool BlockJump { get; set; } = false;
     public int Timeout { get; set; } = 0;
@@ -85,4 +86,6 @@ public class MenuOptions
         new("[ ", new Color().Rainbow()),
         new(" ]", new Color().Rainbow()),
     ];
+
+    public Color? Highlight { get; set; } = null;
 }

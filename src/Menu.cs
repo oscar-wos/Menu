@@ -124,9 +124,7 @@ public static partial class Menu
 
                 switch (item.Type)
                 {
-                    case MenuItemType.Button
-                    or MenuItemType.Choice
-                    or MenuItemType.ChoiceBool:
+                    case MenuItemType.Button or MenuItemType.Choice or MenuItemType.ChoiceBool:
                         _ = html.Append(FormatValues(menu, item));
                         break;
                 }
@@ -209,7 +207,7 @@ public static partial class Menu
                 .Append(item.Values[prevIndex].ToString())
                 .Append(' ')
                 .Append(FormatSelector(menu, item, 0))
-                .Append(item.Values[currentIndex].ToString())
+                .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
                 .Append(FormatSelector(menu, item, 1))
                 .Append(' ')
                 .Append(item.Values[nextIndex].ToString());
@@ -218,7 +216,7 @@ public static partial class Menu
         {
             _ = result
                 .Append(FormatSelector(menu, item, 0))
-                .Append(item.Values[currentIndex].ToString())
+                .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
                 .Append(FormatSelector(menu, item, 1));
 
             for (int i = 0; i < 2 && i < item.Values.Count - 1; i++)
@@ -237,7 +235,7 @@ public static partial class Menu
 
             _ = result
                 .Append(FormatSelector(menu, item, 0))
-                .Append(item.Values[currentIndex].ToString())
+                .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
                 .Append(FormatSelector(menu, item, 1));
         }
         else
@@ -246,7 +244,7 @@ public static partial class Menu
                 .Append(item.Values[prevIndex].ToString())
                 .Append(' ')
                 .Append(FormatSelector(menu, item, 0))
-                .Append(item.Values[currentIndex].ToString())
+                .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
                 .Append(FormatSelector(menu, item, 1))
                 .Append(' ')
                 .Append(item.Values[nextIndex].ToString());

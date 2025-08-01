@@ -20,9 +20,13 @@ public class MenuValue(
 
     public static implicit operator MenuValue(string value) => new(value);
 
-    public override string ToString()
+    public override string ToString() => FormatString();
+
+    public string ToStringHighlighted(Color? highlight = null) => FormatString(highlight);
+
+    private string FormatString(Color? highlight = null)
     {
-        Color usedColor = Color;
+        Color usedColor = highlight ?? Color;
 
         switch (usedColor.A)
         {
