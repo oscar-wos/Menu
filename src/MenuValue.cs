@@ -35,10 +35,22 @@ public class MenuValue(
                 break;
 
             case 1:
-                return Rainbow.ApplyStrobeEffect(Display, usedColor.R, false);
+                return Rainbow.ApplyStrobeEffect(
+                    Display,
+                    usedColor.R,
+                    usedColor.G,
+                    usedColor.B,
+                    false
+                );
 
             case 2:
-                return Rainbow.ApplyStrobeEffect(Display, usedColor.R, true);
+                return Rainbow.ApplyStrobeEffect(
+                    Display,
+                    usedColor.R,
+                    usedColor.G,
+                    usedColor.B,
+                    true
+                );
 
             default:
                 break;

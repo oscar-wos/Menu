@@ -7,10 +7,26 @@ public static class ColorExtensions
     public static Color Rainbow(this Color _) => Color.FromArgb(0, 0, 0, 0);
 
     public static Color RainbowStrobe(this Color _, byte hueDelta = 60) =>
-        Color.FromArgb(1, ClampHue(hueDelta), 0, 0);
+        Color.FromArgb(1, 0, 255, ClampHue(hueDelta));
+
+    public static Color RainbowStrobe(
+        this Color _,
+        Color startColor,
+        Color endColor,
+        byte hueDelta = 60
+    ) =>
+        Color.FromArgb(1, ColorToHueByte(startColor), ColorToHueByte(endColor), ClampHue(hueDelta));
 
     public static Color RainbowStrobeReversed(this Color _, byte hueDelta = 60) =>
-        Color.FromArgb(2, ClampHue(hueDelta), 0, 0);
+        Color.FromArgb(2, 0, 255, ClampHue(hueDelta));
+
+    public static Color RainbowStrobeReversed(
+        this Color _,
+        Color startColor,
+        Color endColor,
+        byte hueDelta = 60
+    ) =>
+        Color.FromArgb(2, ColorToHueByte(startColor), ColorToHueByte(endColor), ClampHue(hueDelta));
 
     private static byte ClampHue(byte hueDelta) =>
         (byte)(
@@ -18,4 +34,42 @@ public static class ColorExtensions
             : hueDelta > 255 ? 255
             : hueDelta
         );
+
+    private static byte ColorToHueByte(Color color)
+    {
+        float r = color.R / 255f;
+        float g = color.G / 255f;
+        float b = color.B / 255f;
+
+        float max = Math.Max(r, Math.Max(g, b));
+        float min = Math.Min(r, Math.Min(g, b));
+        float delta = max - min;
+
+        float hue = 0f;
+
+        if (delta != 0f)
+        {
+            if (max == r)
+            {
+                hue = (g - b) / delta % 6f;
+            }
+            else if (max == g)
+            {
+                hue = ((b - r) / delta) + 2f;
+            }
+            else
+            {
+                hue = ((r - g) / delta) + 4f;
+            }
+        }
+
+        hue *= 60f;
+
+        if (hue < 0f)
+        {
+            hue += 360f;
+        }
+
+        return (byte)(hue / Helpers.Rainbow.HUE_BYTE);
+    }
 }

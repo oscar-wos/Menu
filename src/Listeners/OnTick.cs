@@ -9,11 +9,15 @@ internal static class OnTickListener
 
     private static void OnTick()
     {
-        foreach ((CCSPlayerController player, (MenuBase menu, string html)) in Menu._currentMenu)
+        foreach ((int playerSlot, (MenuBase menu, string html)) in Menu._currentMenu)
         {
-            if (!player.IsValid || player.Connected != PlayerConnectedState.PlayerConnected)
+            if (
+                !Menu._players.TryGetValue(playerSlot, out CCSPlayerController? player)
+                || !player.IsValid
+                || player.Connected != PlayerConnectedState.PlayerConnected
+            )
             {
-                Menu.Remove(player);
+                Menu.Remove(playerSlot);
                 continue;
             }
 

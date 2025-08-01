@@ -29,19 +29,34 @@ public class Example : BasePlugin
                 {
                     DisplayItemsInHeader = false,
                     BlockMovement = true,
-                    Highlight = Color.Red,
+                    Highlight = new Color().RainbowStrobe(Color.Red, Color.Blue),
                 };
 
                 var newMenu = new MenuBase(
-                    new MenuValue("Skins", new Color().RainbowStrobe()),
-                    new MenuValue("kzg", new Color().RainbowStrobeReversed(180)),
+                    header: new MenuValue("Skins", new Color().RainbowStrobe()),
+                    footer: new MenuValue(
+                        "kzg",
+                        new Color().RainbowStrobeReversed(Color.Purple, Color.Red)
+                    ),
                     options: menuOptions
                 );
-                newMenu.AddItem(
+
+                newMenu.Items.Add(
                     new(
                         MenuItemType.Choice,
                         head: "type: ",
-                        values: ["Pistols", "Mid", "Rifles", "Knife", "Gloves", "Model"]
+                        values:
+                        [
+                            "Pistols",
+                            new("Mid", new Color().RainbowStrobe(Color.Blue, Color.LightBlue)),
+                            new("Rifles", new Color().RainbowStrobe(Color.Red, Color.Purple)),
+                            new(
+                                "Knife",
+                                new Color().RainbowStrobeReversed(Color.Blue, Color.LightBlue)
+                            ),
+                            new("Gloves", new Color().RainbowStrobe(Color.Green, Color.Yellow)),
+                            new("Model", new Color().RainbowStrobe(Color.Orange, Color.Red)),
+                        ]
                     )
                 );
                 //newMenu.AddItem(new(MenuItemType.Choice, values: ))

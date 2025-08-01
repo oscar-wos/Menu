@@ -11,6 +11,7 @@ public static partial class Menu
         Action<CCSPlayerController, MenuBase, MenuAction>? callback = null
     )
     {
+        _players[player.Slot] = player;
         menu.Callback = callback;
 
         for (int i = 0; i < menu.Items.Count; i++)
@@ -26,18 +27,18 @@ public static partial class Menu
             }
         }
 
-        if (!_menus.TryAdd(player, [menu]))
+        if (!_menus.TryAdd(player.Slot, [menu]))
         {
             if (
                 Get(player) is MenuBase { Options: { } options }
                 && (menu.Options.Priority >= options.Priority || options.Exitable == false)
             )
             {
-                _menus[player].Insert(0, menu);
+                _menus[player.Slot].Insert(0, menu);
             }
             else
             {
-                _menus[player].Add(menu);
+                _menus[player.Slot].Add(menu);
             }
         }
 
@@ -46,7 +47,7 @@ public static partial class Menu
 
     public static void Clear(CCSPlayerController player)
     {
-        if (!_menus.TryGetValue(player, out List<MenuBase>? menus) || menus.Count == 0)
+        if (!_menus.TryGetValue(player.Slot, out List<MenuBase>? menus) || menus.Count == 0)
         {
             return;
         }
@@ -57,22 +58,28 @@ public static partial class Menu
 
             if (menu.Options.Exitable)
             {
-                _menus[player].RemoveAt(i - 1);
+                _menus[player.Slot].RemoveAt(i - 1);
             }
         }
 
-        _ = _currentMenu.Remove(player, out _);
+        _ = _currentMenu.Remove(player.Slot, out _);
     }
 
     public static void Remove(CCSPlayerController player)
     {
-        _ = _menus.Remove(player, out _);
-        _ = _currentMenu.Remove(player, out _);
+        _ = _menus.Remove(player.Slot, out _);
+        _ = _currentMenu.Remove(player.Slot, out _);
+    }
+
+    internal static void Remove(int playerSlot)
+    {
+        _ = _menus.Remove(playerSlot, out _);
+        _ = _currentMenu.Remove(playerSlot, out _);
     }
 
     public static MenuBase? Get(CCSPlayerController player)
     {
-        if (!_menus.TryGetValue(player, out List<MenuBase>? menus))
+        if (!_menus.TryGetValue(player.Slot, out List<MenuBase>? menus))
         {
             return null;
         }

@@ -13,11 +13,11 @@ public static partial class Menu
     internal const int MENU_LENGTH = 300;
 
     private static readonly Timer _menuTimer = new(ProcessMenu, null, 0, 100);
-    internal static readonly Dictionary<CCSPlayerController, List<MenuBase>> _menus = [];
-    internal static readonly Dictionary<
-        CCSPlayerController,
-        (MenuBase menu, string html)
-    > _currentMenu = [];
+
+    internal static readonly Dictionary<int, CCSPlayerController> _players = [];
+    internal static readonly Dictionary<int, List<MenuBase>> _menus = [];
+    internal static readonly Dictionary<int, (MenuBase menu, string html)> _currentMenu = [];
+
     public static event EventHandler<MenuEvent>? OnPrintMenu;
 
     static Menu()
@@ -39,9 +39,9 @@ public static partial class Menu
     {
         Rainbow.UpdateRainbowHue();
 
-        foreach ((CCSPlayerController player, List<MenuBase> menus) in _menus)
+        foreach ((int playerSlot, List<MenuBase> menus) in _menus)
         {
-            if (player is not { IsValid: true } || menus.Count == 0)
+            if (menus.Count == 0)
             {
                 continue;
             }
@@ -163,7 +163,7 @@ public static partial class Menu
                 }
             }
 
-            _currentMenu[player] = (menu, html.ToString());
+            _currentMenu[playerSlot] = (menu, html.ToString());
         }
     }
 
@@ -201,7 +201,7 @@ public static partial class Menu
 
         StringBuilder result = new();
 
-        if (item.Options.Pinwheel)
+        if (item.Options.Pinwheel || (currentIndex != 0 && currentIndex != item.Values.Count - 1))
         {
             _ = result
                 .Append(item.Values[prevIndex].ToString())
@@ -211,43 +211,35 @@ public static partial class Menu
                 .Append(FormatSelector(menu, item, 1))
                 .Append(' ')
                 .Append(item.Values[nextIndex].ToString());
-        }
-        else if (currentIndex == 0)
-        {
-            _ = result
-                .Append(FormatSelector(menu, item, 0))
-                .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
-                .Append(FormatSelector(menu, item, 1));
-
-            for (int i = 0; i < 2 && i < item.Values.Count - 1; i++)
-            {
-                TrimValue(item.Values[i + 1], splitChars);
-                _ = result.Append(' ').Append(item.Values[i + 1].ToString());
-            }
-        }
-        else if (currentIndex == item.Values.Count - 1)
-        {
-            for (int i = 2; i > 0 && currentIndex - i >= 0; i--)
-            {
-                TrimValue(item.Values[currentIndex - i], splitChars);
-                _ = result.Append(item.Values[currentIndex - i].ToString()).Append(' ');
-            }
-
-            _ = result
-                .Append(FormatSelector(menu, item, 0))
-                .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
-                .Append(FormatSelector(menu, item, 1));
         }
         else
         {
-            _ = result
-                .Append(item.Values[prevIndex].ToString())
-                .Append(' ')
-                .Append(FormatSelector(menu, item, 0))
-                .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
-                .Append(FormatSelector(menu, item, 1))
-                .Append(' ')
-                .Append(item.Values[nextIndex].ToString());
+            if (currentIndex == 0)
+            {
+                _ = result
+                    .Append(FormatSelector(menu, item, 0))
+                    .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
+                    .Append(FormatSelector(menu, item, 1));
+
+                for (int i = 0; i < 2 && i < item.Values.Count - 1; i++)
+                {
+                    TrimValue(item.Values[i + 1], splitChars);
+                    _ = result.Append(' ').Append(item.Values[i + 1].ToString());
+                }
+            }
+            else
+            {
+                for (int i = 2; i > 0 && currentIndex - i >= 0; i--)
+                {
+                    TrimValue(item.Values[currentIndex - i], splitChars);
+                    _ = result.Append(item.Values[currentIndex - i].ToString()).Append(' ');
+                }
+
+                _ = result
+                    .Append(FormatSelector(menu, item, 0))
+                    .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
+                    .Append(FormatSelector(menu, item, 1));
+            }
         }
 
         return result.ToString();
