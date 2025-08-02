@@ -62,12 +62,9 @@ public static partial class Menu
 
                 if (menu.Options.DisplayItemsInHeader && menu.SelectedItem is not null)
                 {
-                    _ = html.Append("</font>")
-                        .Append(menu.Options.FooterSizeHtml())
-                        .Append(' ')
-                        .Append(menu.SelectedItem.Value.Index + 1)
-                        .Append('/')
-                        .Append(menu.Items.Count);
+                    _ = html.Append(
+                        $"</font>{menu.Options.FooterSizeHtml()} {menu.SelectedItem.Value.Index + 1}/{menu.Items.Count}"
+                    );
                 }
 
                 _ = html.Append("<br>");
@@ -201,45 +198,37 @@ public static partial class Menu
 
         StringBuilder result = new();
 
-        if (item.Options.Pinwheel || (currentIndex != 0 && currentIndex != item.Values.Count - 1))
+        string BuildSelector() =>
+            $"{FormatSelector(menu, item, 0)}{item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight)}{FormatSelector(menu, item, 1)}";
+
+        if (item.Options.Pinwheel || (currentIndex > 0 && currentIndex < item.Values.Count - 1))
         {
-            _ = result
-                .Append(item.Values[prevIndex].ToString())
-                .Append(' ')
-                .Append(FormatSelector(menu, item, 0))
-                .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
-                .Append(FormatSelector(menu, item, 1))
-                .Append(' ')
-                .Append(item.Values[nextIndex].ToString());
+            _ = result.Append(
+                $"{item.Values[prevIndex]} {BuildSelector()} {item.Values[nextIndex]}"
+            );
+        }
+        else if (currentIndex == 0)
+        {
+            _ = result.Append(BuildSelector());
+
+            for (int i = 0; i < 2 && i < item.Values.Count - 1; i++)
+            {
+                TrimValue(item.Values[i + 1], splitChars);
+                _ = result.Append($" {item.Values[i + 1]}");
+            }
         }
         else
         {
-            if (currentIndex == 0)
+            for (int i = 2; i > 0; i--)
             {
-                _ = result
-                    .Append(FormatSelector(menu, item, 0))
-                    .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
-                    .Append(FormatSelector(menu, item, 1));
-
-                for (int i = 0; i < 2 && i < item.Values.Count - 1; i++)
-                {
-                    TrimValue(item.Values[i + 1], splitChars);
-                    _ = result.Append(' ').Append(item.Values[i + 1].ToString());
-                }
-            }
-            else
-            {
-                for (int i = 2; i > 0 && currentIndex - i >= 0; i--)
+                if (currentIndex - i >= 0)
                 {
                     TrimValue(item.Values[currentIndex - i], splitChars);
-                    _ = result.Append(item.Values[currentIndex - i].ToString()).Append(' ');
+                    _ = result.Append($"{item.Values[currentIndex - i]} ");
                 }
-
-                _ = result
-                    .Append(FormatSelector(menu, item, 0))
-                    .Append(item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight))
-                    .Append(FormatSelector(menu, item, 1));
             }
+
+            _ = result.Append(BuildSelector());
         }
 
         return result.ToString();

@@ -9,14 +9,14 @@ public class MenuValue(
     string value,
     Color? color = null,
     object? data = null,
-    Action<CCSPlayerController, MenuAction, MenuValue>? callback = null
+    Action<CCSPlayerController, MenuValue, MenuAction>? callback = null
 )
 {
     internal string Display { get; set; } = value;
     public string Value { get; set; } = value;
     public Color Color { get; set; } = color ?? Color.White;
     public object? Data { get; set; } = data;
-    public Action<CCSPlayerController, MenuAction, MenuValue>? Callback { get; } = callback;
+    public Action<CCSPlayerController, MenuValue, MenuAction>? Callback { get; } = callback;
 
     public static implicit operator MenuValue(string value) => new(value);
 

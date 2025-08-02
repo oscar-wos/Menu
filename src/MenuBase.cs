@@ -51,6 +51,14 @@ public class MenuBase
         {
             case MenuButton.Assist:
                 Callback?.Invoke(player, this, MenuAction.Assist);
+                SelectedItem?.Item.Callback?.Invoke(player, SelectedItem?.Item!, MenuAction.Assist);
+
+                SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
+                    player,
+                    SelectedItem?.Item.SelectedValue?.Value!,
+                    MenuAction.Assist
+                );
+
                 break;
 
             case MenuButton.Up when !Text:
@@ -64,6 +72,19 @@ public class MenuBase
                     if (SelectItem(newIndex))
                     {
                         Callback?.Invoke(player, this, MenuAction.Update);
+
+                        SelectedItem?.Item.Callback?.Invoke(
+                            player,
+                            SelectedItem?.Item!,
+                            MenuAction.Update
+                        );
+
+                        SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
+                            player,
+                            SelectedItem?.Item.SelectedValue?.Value!,
+                            MenuAction.Update
+                        );
+
                         break;
                     }
                 }
@@ -76,11 +97,28 @@ public class MenuBase
                     return;
                 }
 
-                for (int newIndex = SelectedItem.Value.Index + 1; newIndex < Items.Count; newIndex++)
+                for (
+                    int newIndex = SelectedItem.Value.Index + 1;
+                    newIndex < Items.Count;
+                    newIndex++
+                )
                 {
                     if (SelectItem(newIndex))
                     {
                         Callback?.Invoke(player, this, MenuAction.Update);
+
+                        SelectedItem?.Item.Callback?.Invoke(
+                            player,
+                            SelectedItem?.Item!,
+                            MenuAction.Update
+                        );
+
+                        SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
+                            player,
+                            SelectedItem?.Item.SelectedValue?.Value!,
+                            MenuAction.Update
+                        );
+
                         break;
                     }
                 }
@@ -97,6 +135,18 @@ public class MenuBase
                 if (SelectedItem.Value.Item.Input(button))
                 {
                     Callback?.Invoke(player, this, MenuAction.Update);
+
+                    SelectedItem?.Item.Callback?.Invoke(
+                        player,
+                        SelectedItem?.Item!,
+                        MenuAction.Update
+                    );
+
+                    SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
+                        player,
+                        SelectedItem?.Item.SelectedValue?.Value!,
+                        MenuAction.Update
+                    );
                 }
 
                 break;
@@ -108,10 +158,26 @@ public class MenuBase
                 }
 
                 Callback?.Invoke(player, this, MenuAction.Select);
+                SelectedItem?.Item.Callback?.Invoke(player, SelectedItem?.Item!, MenuAction.Select);
+
+                SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
+                    player,
+                    SelectedItem?.Item.SelectedValue?.Value!,
+                    MenuAction.Select
+                );
+
                 break;
 
             case MenuButton.Exit when Options.Exitable:
                 Callback?.Invoke(player, this, MenuAction.Cancel);
+                SelectedItem?.Item.Callback?.Invoke(player, SelectedItem?.Item!, MenuAction.Cancel);
+
+                SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
+                    player,
+                    SelectedItem?.Item.SelectedValue?.Value!,
+                    MenuAction.Cancel
+                );
+
                 Menu.Clear(player);
                 break;
         }

@@ -9,16 +9,17 @@ public class MenuItem(
     List<MenuValue>? values = null,
     MenuValue? tail = null,
     MenuItemOptions? options = null,
-    Action<CCSPlayerController, MenuAction, MenuItem>? callback = null
+    object? data = null,
+    Action<CCSPlayerController, MenuItem, MenuAction>? callback = null
 )
 {
-    public MenuItemOptions Options { get; init; } = options ?? new MenuItemOptions();
     public MenuItemType Type { get; set; } = type;
     public MenuValue? Head { get; set; } = head;
     public MenuValue? Tail { get; set; } = tail;
-    public object? Data { get; set; } = null;
+    public MenuItemOptions Options { get; init; } = options ?? new MenuItemOptions();
+    public object? Data { get; set; } = data;
+    public Action<CCSPlayerController, MenuItem, MenuAction>? Callback { get; } = callback;
     public List<MenuValue>? Values { get; set; } = values;
-    public Action<CCSPlayerController, MenuAction, MenuItem>? Callback { get; } = callback;
     public (int Index, MenuValue Value)? SelectedValue { get; set; } = null;
 
     public bool Input(MenuButton button)
