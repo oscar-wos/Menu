@@ -218,7 +218,7 @@ public class Example : BasePlugin
                         "button",
                         new Color().Rainbow(),
                         data: "multi button1?",
-                        (player, menuValue, menuAction) =>
+                        (player, menu, menuValue, menuAction) =>
                         {
                             if (menuAction == MenuAction.Select)
                             {
@@ -230,7 +230,7 @@ public class Example : BasePlugin
                         "button2",
                         new Color().Rainbow(),
                         data: "multi button2?",
-                        (player, menuValue, menuAction) =>
+                        (player, menu, menuValue, menuAction) =>
                         {
                             if (menuAction == MenuAction.Select)
                             {
@@ -248,7 +248,7 @@ public class Example : BasePlugin
                 MenuItemType.Button,
                 new("button", new Color().Rainbow()),
                 data: "single button",
-                callback: (player, menuItem, menuAction) =>
+                callback: (player, menu, menuItem, menuAction) =>
                 {
                     if (menuAction == MenuAction.Select)
                     {

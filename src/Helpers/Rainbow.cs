@@ -81,6 +81,7 @@ internal static class Rainbow
             }
 
             Color color = GetColorFromHue(strobeHue);
+
             _ = sb.Append(
                 $"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\">{input[i]}</font>"
             );

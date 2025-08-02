@@ -50,12 +50,11 @@ public class MenuBase
         switch (button)
         {
             case MenuButton.Assist:
-                Callback?.Invoke(player, this, MenuAction.Assist);
-                SelectedItem?.Item.Callback?.Invoke(player, SelectedItem?.Item!, MenuAction.Assist);
-
-                SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
+                Invoke(
                     player,
-                    SelectedItem?.Item.SelectedValue?.Value!,
+                    this,
+                    SelectedItem?.Item,
+                    SelectedItem?.Item.SelectedValue?.Value,
                     MenuAction.Assist
                 );
 
@@ -71,17 +70,11 @@ public class MenuBase
                 {
                     if (SelectItem(newIndex))
                     {
-                        Callback?.Invoke(player, this, MenuAction.Update);
-
-                        SelectedItem?.Item.Callback?.Invoke(
+                        Invoke(
                             player,
-                            SelectedItem?.Item!,
-                            MenuAction.Update
-                        );
-
-                        SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
-                            player,
-                            SelectedItem?.Item.SelectedValue?.Value!,
+                            this,
+                            SelectedItem?.Item,
+                            SelectedItem?.Item.SelectedValue?.Value,
                             MenuAction.Update
                         );
 
@@ -105,17 +98,11 @@ public class MenuBase
                 {
                     if (SelectItem(newIndex))
                     {
-                        Callback?.Invoke(player, this, MenuAction.Update);
-
-                        SelectedItem?.Item.Callback?.Invoke(
+                        Invoke(
                             player,
-                            SelectedItem?.Item!,
-                            MenuAction.Update
-                        );
-
-                        SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
-                            player,
-                            SelectedItem?.Item.SelectedValue?.Value!,
+                            this,
+                            SelectedItem?.Item,
+                            SelectedItem?.Item.SelectedValue?.Value,
                             MenuAction.Update
                         );
 
@@ -134,17 +121,11 @@ public class MenuBase
 
                 if (SelectedItem.Value.Item.Input(button))
                 {
-                    Callback?.Invoke(player, this, MenuAction.Update);
-
-                    SelectedItem?.Item.Callback?.Invoke(
+                    Invoke(
                         player,
-                        SelectedItem?.Item!,
-                        MenuAction.Update
-                    );
-
-                    SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
-                        player,
-                        SelectedItem?.Item.SelectedValue?.Value!,
+                        this,
+                        SelectedItem?.Item,
+                        SelectedItem?.Item.SelectedValue?.Value,
                         MenuAction.Update
                     );
                 }
@@ -157,24 +138,22 @@ public class MenuBase
                     return;
                 }
 
-                Callback?.Invoke(player, this, MenuAction.Select);
-                SelectedItem?.Item.Callback?.Invoke(player, SelectedItem?.Item!, MenuAction.Select);
-
-                SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
+                Invoke(
                     player,
-                    SelectedItem?.Item.SelectedValue?.Value!,
+                    this,
+                    SelectedItem?.Item,
+                    SelectedItem?.Item.SelectedValue?.Value,
                     MenuAction.Select
                 );
 
                 break;
 
             case MenuButton.Exit when Options.Exitable:
-                Callback?.Invoke(player, this, MenuAction.Cancel);
-                SelectedItem?.Item.Callback?.Invoke(player, SelectedItem?.Item!, MenuAction.Cancel);
-
-                SelectedItem?.Item.SelectedValue?.Value.Callback?.Invoke(
+                Invoke(
                     player,
-                    SelectedItem?.Item.SelectedValue?.Value!,
+                    this,
+                    SelectedItem?.Item,
+                    SelectedItem?.Item.SelectedValue?.Value,
                     MenuAction.Cancel
                 );
 
@@ -188,4 +167,17 @@ public class MenuBase
 
     private bool SelectItem(int index) =>
         IsSelectable(Items[index]) && (SelectedItem = (index, Items[index])) != null;
+
+    private static void Invoke(
+        CCSPlayerController player,
+        MenuBase menu,
+        MenuItem? menuItem,
+        MenuValue? menuValue,
+        MenuAction menuAction
+    )
+    {
+        menu.Callback?.Invoke(player, menu, menuAction);
+        menuItem?.Callback?.Invoke(player, menu, menuItem, menuAction);
+        menuValue?.Callback?.Invoke(player, menu, menuValue, menuAction);
+    }
 }

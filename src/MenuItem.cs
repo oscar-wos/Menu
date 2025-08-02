@@ -10,7 +10,7 @@ public class MenuItem(
     MenuValue? tail = null,
     MenuItemOptions? options = null,
     object? data = null,
-    Action<CCSPlayerController, MenuItem, MenuAction>? callback = null
+    Action<CCSPlayerController, MenuBase, MenuItem, MenuAction>? callback = null
 )
 {
     public MenuItemType Type { get; set; } = type;
@@ -18,7 +18,8 @@ public class MenuItem(
     public MenuValue? Tail { get; set; } = tail;
     public MenuItemOptions Options { get; init; } = options ?? new MenuItemOptions();
     public object? Data { get; set; } = data;
-    public Action<CCSPlayerController, MenuItem, MenuAction>? Callback { get; } = callback;
+    public Action<CCSPlayerController, MenuBase, MenuItem, MenuAction>? Callback { get; } =
+        callback;
     public List<MenuValue>? Values { get; set; } = values;
     public (int Index, MenuValue Value)? SelectedValue { get; set; } = null;
 

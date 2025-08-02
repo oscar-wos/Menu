@@ -48,6 +48,7 @@ public class MenuOptions
     }
 
     public MenuInput<MenuButton> Buttons { get; set; } = new();
+    public MenuContinuous<MenuButton> Continuous { get; set; } = new();
     public bool BlockMovement { get; set; } = false;
     public int ButtonsDelay { get; set; } = 150;
     public bool DisplayItemsInHeader { get; set; } = true;

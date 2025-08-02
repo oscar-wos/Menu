@@ -50,13 +50,18 @@ internal static class RunCommandHook
             MenuButton button = _menuButtons[i];
             ulong buttonMask = menu.Options.Buttons[button];
 
-            if (
-                (buttons & buttonMask) == buttonMask
-                && menu.InputDelay[i] + menu.Options.ButtonsDelay <= Environment.TickCount64
-            )
+            if ((buttons & buttonMask) == buttonMask)
             {
-                menu.InputDelay[i] = Environment.TickCount64;
-                menu.Input(player, button);
+                if (menu.InputDelay[i] + menu.Options.ButtonsDelay <= Environment.TickCount64)
+                {
+                    menu.InputDelay[i] = Environment.TickCount64;
+                    menu.Input(player, button);
+                }
+
+                if (!menu.Options.Continuous[button])
+                {
+                    menu.InputDelay[i] = Environment.TickCount64;
+                }
             }
         }
 
