@@ -13,25 +13,25 @@ internal static class SpecModeHook
             : "48 89 5C 24 08 48 89 74 24 18 57 41"
     );
 
-    public static void Register() => _specMode.Hook(SpecModePre, HookMode.Pre);
+    public static void Register() => _specMode.Hook(SpecMode, HookMode.Pre);
 
-    private static HookResult SpecModePre(DynamicHook h)
+    private static HookResult SpecMode(DynamicHook h)
     {
         if (
             h.GetParam<CPlayer_ObserverServices>(0)
                 .Pawn.Value.Controller.Value?.As<CCSPlayerController>()
-            is not CCSPlayerController { IsValid: true } player
+            is not { IsValid: true } player
         )
         {
             return HookResult.Continue;
         }
 
-        if (Menu.Get(player) is not MenuBase { Options.ProcessInput: true } menu)
+        if (Menu.Get(player) is not { Options.ProcessInput: true } menu)
         {
             return HookResult.Continue;
         }
 
-        menu.Input(player, MenuButton.Select);
-        return HookResult.Stop;
+        menu.Input(MenuButton.Select);
+        return HookResult.Continue;
     }
 }

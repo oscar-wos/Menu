@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using RMenu.Enums;
@@ -29,7 +30,7 @@ internal static class RunCommandHook
             return HookResult.Continue;
         }
 
-        if (Menu.Get(player) is not MenuBase { Options.ProcessInput: true } menu)
+        if (Menu.Get(player) is not { Options.ProcessInput: true } menu)
         {
             return HookResult.Continue;
         }
@@ -38,30 +39,23 @@ internal static class RunCommandHook
 
         if (menu.Options.BlockMovement)
         {
-            userCmd->BaseUserCmd->m_flForwardMove = 0;
-            userCmd->BaseUserCmd->m_flSideMove = 0;
-            userCmd->BaseUserCmd->m_flUpMove = 0;
+            userCmd->m_pBaseUserCmd->m_flForwardMove = 0;
+            userCmd->m_pBaseUserCmd->m_flSideMove = 0;
+            userCmd->m_pBaseUserCmd->m_flUpMove = 0;
         }
 
-        ulong buttons = userCmd->ButtonState.PressedButtons | userCmd->ButtonState.ScrollButtons;
+        PlayerButtons buttons = (PlayerButtons)(
+            userCmd->m_InButtonState.m_nPressedButtons | userCmd->m_InButtonState.m_nScrollButtons
+        );
 
         for (int i = 0; i < _menuButtons.Length; i++)
         {
             MenuButton button = _menuButtons[i];
-            ulong buttonMask = menu.Options.Buttons[button];
+            PlayerButtons buttonMask = menu.Options.Buttons[button];
 
             if ((buttons & buttonMask) == buttonMask)
             {
-                if (menu.InputDelay[i] + menu.Options.ButtonsDelay <= Environment.TickCount64)
-                {
-                    menu.InputDelay[i] = Environment.TickCount64;
-                    menu.Input(player, button);
-                }
-
-                if (!menu.Options.Continuous[button])
-                {
-                    menu.InputDelay[i] = Environment.TickCount64;
-                }
+                menu.Input(button);
             }
         }
 

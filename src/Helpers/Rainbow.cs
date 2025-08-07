@@ -7,30 +7,29 @@ internal static class Rainbow
 {
     internal const int HUE_MAX = 360;
     internal const double HUE_BYTE = HUE_MAX / 255.0;
-    internal const double HUE_INCREMENT = 3.233;
+    internal const double HUE_INCREMENT = 5;
 
-    private static readonly Color[] _hue;
+    private static readonly Color[] _hue = new Color[HUE_MAX];
+
     private static double _currentHue;
-
     public static Color CurrentColor { get; private set; }
 
     static Rainbow()
     {
-        _hue = new Color[HUE_MAX];
-
         for (int i = 0; i < HUE_MAX; i++)
         {
             _hue[i] = ComputeColor(i);
         }
     }
 
-    public static void UpdateRainbowHue()
+    public static void UpdateHue()
     {
         _currentHue = (_currentHue + HUE_INCREMENT + HUE_MAX) % HUE_MAX;
         CurrentColor = GetColorFromHue(_currentHue);
     }
 
-    public static string ApplyStrobeEffect(
+    public static void Strobe(
+        StringBuilder stringBuilder,
         string input,
         byte startHue,
         byte endHue,
@@ -39,7 +38,6 @@ internal static class Rainbow
     )
     {
         int step = input.Length > 1 ? hueDelta / (input.Length - 1) : hueDelta;
-        StringBuilder sb = new(input.Length * 37);
 
         if (isReversed)
         {
@@ -56,6 +54,9 @@ internal static class Rainbow
                 double startHue360 = startHue * HUE_BYTE;
                 double endHue360 = endHue * HUE_BYTE;
 
+                double phase = strobeHue / HUE_MAX * 2.0;
+                double pingPong = phase <= 1.0 ? phase : 2.0 - phase;
+
                 if (Math.Abs(endHue360 - startHue360) > HUE_MAX / 2)
                 {
                     if (startHue360 > endHue360)
@@ -68,9 +69,6 @@ internal static class Rainbow
                     }
                 }
 
-                double phase = strobeHue / HUE_MAX * 2.0;
-                double pingPong = phase <= 1.0 ? phase : 2.0 - phase;
-
                 strobeHue = startHue360 + (pingPong * (endHue360 - startHue360));
                 strobeHue %= HUE_MAX;
 
@@ -82,12 +80,10 @@ internal static class Rainbow
 
             Color color = GetColorFromHue(strobeHue);
 
-            _ = sb.Append(
+            _ = stringBuilder.Append(
                 $"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\">{input[i]}</font>"
             );
         }
-
-        return sb.ToString();
     }
 
     private static Color ComputeColor(double hue)

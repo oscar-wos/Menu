@@ -1,62 +1,79 @@
+using System.Collections;
 using System.Drawing;
-using CounterStrikeSharp.API.Core;
+using System.Text;
 using RMenu.Enums;
-using RMenu.Helpers;
 
 namespace RMenu;
 
-public class MenuValue(
-    string value,
-    Color? color = null,
-    object? data = null,
-    Action<CCSPlayerController, MenuBase, MenuValue, MenuAction>? callback = null
-)
+public class MenuValue : IEnumerable<MenuObject>
 {
-    internal string Display { get; set; } = value;
-    public string Value { get; set; } = value;
-    public Color Color { get; set; } = color ?? Color.White;
-    public object? Data { get; set; } = data;
-    public Action<CCSPlayerController, MenuBase, MenuValue, MenuAction>? Callback { get; } =
-        callback;
+    public static implicit operator MenuValue(List<MenuObject> menuObjects) => new(menuObjects);
 
-    public static implicit operator MenuValue(string value) => new(value);
+    public IEnumerator<MenuObject> GetEnumerator() => Objects.GetEnumerator();
 
-    public override string ToString() => FormatString();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public string ToStringHighlighted(Color? highlight = null) => FormatString(highlight);
+    public void Add(string text) => Objects.Add(new MenuObject(text));
 
-    private string FormatString(Color? highlight = null)
+    public void Add(MenuObject menuObject) => Objects.Add(menuObject);
+
+    public List<MenuObject> Objects { get; set; } = [];
+    public object? Data { get; set; }
+    public Action<MenuBase, MenuValue, MenuAction>? Callback { get; }
+
+    public MenuValue() { }
+
+    public MenuValue(
+        string text,
+        Color? color = null,
+        object? data = null,
+        Action<MenuBase, MenuValue, MenuAction>? callback = null
+    )
     {
-        Color usedColor = highlight ?? Color;
+        Objects = [new MenuObject(text, new MenuFormat(color))];
+        Data = data;
+        Callback = callback;
+    }
 
-        switch (usedColor.A)
+    public MenuValue(
+        IEnumerable<string> texts,
+        object? data = null,
+        Action<MenuBase, MenuValue, MenuAction>? callback = null
+    )
+    {
+        Objects = [.. texts.Select(t => new MenuObject(t))];
+        Data = data;
+        Callback = callback;
+    }
+
+    public MenuValue(
+        IEnumerable<MenuObject> values,
+        object? data = null,
+        Action<MenuBase, MenuValue, MenuAction>? callback = null
+    )
+    {
+        Objects = [.. values];
+        Data = data;
+        Callback = callback;
+    }
+
+    internal void Render(StringBuilder stringBuilder, MenuFormat? highlight = null)
+    {
+        for (int i = 0; i < Objects.Count; i++)
         {
-            case 0:
-                usedColor = Rainbow.CurrentColor;
-                break;
+            Objects[i].Render(stringBuilder, highlight);
+        }
+    }
 
-            case 1:
-                return Rainbow.ApplyStrobeEffect(
-                    Display,
-                    usedColor.R,
-                    usedColor.G,
-                    usedColor.B,
-                    false
-                );
+    internal int Length()
+    {
+        int length = 0;
 
-            case 2:
-                return Rainbow.ApplyStrobeEffect(
-                    Display,
-                    usedColor.R,
-                    usedColor.G,
-                    usedColor.B,
-                    true
-                );
-
-            default:
-                break;
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            length += Objects[i].Text.Length;
         }
 
-        return $"<font color=\"#{usedColor.R:X2}{usedColor.G:X2}{usedColor.B:X2}\">{Display}</font>";
+        return length;
     }
 }

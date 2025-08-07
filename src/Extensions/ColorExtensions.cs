@@ -6,27 +6,25 @@ public static class ColorExtensions
 {
     public static Color Rainbow(this Color _) => Color.FromArgb(0, 0, 0, 0);
 
-    public static Color RainbowStrobe(this Color _, byte hueDelta = 60) =>
+    public static Color Strobe(this Color _, byte hueDelta = 60) =>
         Color.FromArgb(1, 0, 255, ClampHue(hueDelta));
 
-    public static Color RainbowStrobe(
+    public static Color Strobe(
         this Color _,
         Color startColor,
         Color endColor,
         byte hueDelta = 60
-    ) =>
-        Color.FromArgb(1, ColorToHueByte(startColor), ColorToHueByte(endColor), ClampHue(hueDelta));
+    ) => Color.FromArgb(1, ColorToByte(startColor), ColorToByte(endColor), ClampHue(hueDelta));
 
-    public static Color RainbowStrobeReversed(this Color _, byte hueDelta = 60) =>
+    public static Color StrobeReversed(this Color _, byte hueDelta = 60) =>
         Color.FromArgb(2, 0, 255, ClampHue(hueDelta));
 
-    public static Color RainbowStrobeReversed(
+    public static Color StrobeReversed(
         this Color _,
         Color startColor,
         Color endColor,
         byte hueDelta = 60
-    ) =>
-        Color.FromArgb(2, ColorToHueByte(startColor), ColorToHueByte(endColor), ClampHue(hueDelta));
+    ) => Color.FromArgb(2, ColorToByte(startColor), ColorToByte(endColor), ClampHue(hueDelta));
 
     private static byte ClampHue(byte hueDelta) =>
         (byte)(
@@ -35,7 +33,7 @@ public static class ColorExtensions
             : hueDelta
         );
 
-    private static byte ColorToHueByte(Color color)
+    private static byte ColorToByte(Color color)
     {
         float r = color.R / 255f;
         float g = color.G / 255f;

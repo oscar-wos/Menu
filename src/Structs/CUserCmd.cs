@@ -6,8 +6,8 @@ namespace RMenu.Structs;
 public unsafe struct CUserCmd
 {
     [FieldOffset(0x40)]
-    public CBaseUserCmdPb* BaseUserCmd;
+    public CBaseUserCmdPB* m_pBaseUserCmd;
 
     [FieldOffset(0x58)]
-    public CInButtonState ButtonState;
+    public CInButtonStatePB m_InButtonState;
 }

@@ -1,8 +1,6 @@
-﻿using System.Drawing;
-using System.Reflection;
+using System.Drawing;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
 using RMenu;
 using RMenu.Enums;
 using RMenu.Extensions;
@@ -17,119 +15,6 @@ public class Example : BasePlugin
     public override void Load(bool hotReload)
     {
         AddCommand("css_test", "", CommandTest);
-
-        AddCommand(
-            "css_test2",
-            "",
-            (player, info) =>
-            {
-                if (player is null || !player.IsValid)
-                {
-                    return;
-                }
-
-                MenuOptions menuOptions = new()
-                {
-                    DisplayItemsInHeader = false,
-                    BlockMovement = true,
-                    Highlight = new Color().RainbowStrobe(Color.Red, Color.Blue),
-                };
-
-                MenuBase newMenu = new(
-                    header: new MenuValue("Skins", new Color().RainbowStrobe()),
-                    footer: new MenuValue(
-                        "kzg",
-                        new Color().RainbowStrobeReversed(Color.Purple, Color.Red)
-                    ),
-                    options: menuOptions
-                );
-
-                newMenu.Items.Add(
-                    new(
-                        MenuItemType.Choice,
-                        head: "type: ",
-                        values:
-                        [
-                            "Pistols",
-                            new("Mid", new Color().RainbowStrobe(Color.Blue, Color.LightBlue)),
-                            new("Rifles", new Color().RainbowStrobe(Color.Red, Color.Purple)),
-                            new(
-                                "Knife",
-                                new Color().RainbowStrobeReversed(Color.Blue, Color.LightBlue)
-                            ),
-                            new("Gloves", new Color().RainbowStrobe(Color.Green, Color.Yellow)),
-                            new("Model", new Color().RainbowStrobe(Color.Orange, Color.Red)),
-                        ]
-                    )
-                );
-                //newMenu.Items.Add(new(MenuItemType.Choice, values: ))
-
-                CsItem[] items =
-                [
-                    .. typeof(CsItem)
-                        .GetFields(BindingFlags.Public | BindingFlags.Static)
-                        .OrderBy(f => f.MetadataToken) // Preserves declaration order
-                        .GroupBy(f => (int)f.GetValue(null)!)
-                        .Select(g => g.First()) // Select the first declared field for each value
-                        .Select(f => (CsItem)f.GetValue(null)!),
-                ];
-
-                CsItem[] pistols = [.. items.Where(item => (int)item >= 200 && (int)item < 300)];
-
-                // Filter mid-tier weapons: values between 300 and 312 (i.e. <400)
-                CsItem[] mid = [.. items.Where(item => (int)item >= 300 && (int)item < 400)];
-
-                // Filter rifles: values between 400 and 410 (i.e. <500)
-                CsItem[] rifles = [.. items.Where(item => (int)item >= 400 && (int)item < 500)];
-
-                newMenu.Items.Add(
-                    new(
-                        MenuItemType.Choice,
-                        head: "weapon: ",
-                        values: [.. pistols.Select(p => new MenuValue(p.ToString(), data: p))]
-                    )
-                );
-
-                newMenu.Items.Add(new(MenuItemType.Spacer));
-
-                Menu.Add(
-                    player,
-                    newMenu,
-                    (player, menu, action) =>
-                    {
-                        if (action != MenuAction.Update)
-                        {
-                            return;
-                        }
-
-                        if (menu.SelectedItem?.Index == 0)
-                        {
-                            if (menu.SelectedItem?.Item.SelectedValue?.Index == 0)
-                            {
-                                menu.Items[1].Values =
-                                [
-                                    .. pistols.Select(p => new MenuValue(p.ToString(), data: p)),
-                                ];
-                            }
-                            else if (menu.SelectedItem?.Item.SelectedValue?.Index == 1)
-                            {
-                                menu.Items[1].Values =
-                                [
-                                    .. mid.Select(m => new MenuValue(m.ToString(), data: m)),
-                                ];
-                            }
-                            else if (menu.SelectedItem?.Item.SelectedValue?.Index == 2)
-                            {
-                                menu.Items[1].Values =
-                                [
-                                    .. rifles.Select(r => new MenuValue(r.ToString(), data: r)),
-                                ];
-                            }
-                        }
-                    }
-                );
-            }
-        );
     }
 
     private void CommandTest(CCSPlayerController? player, CommandInfo info)
@@ -139,183 +24,118 @@ public class Example : BasePlugin
             return;
         }
 
+        MenuValue header = ["new", new MenuObject("header", new MenuFormat(Color.Green))];
+        MenuValue footer = new("kzg", new Color().Strobe(Color.Red, Color.Purple));
         MenuOptions options = new() { BlockMovement = true, DisplayItemsInHeader = true };
 
-        List<MenuValue> customHeader =
+        MenuBase menu = new(header: header, footer: footer, options: options);
+
+        List<MenuValue> values = [];
+
+        foreach (
+            (
+                string mapName,
+                string mapId,
+                bool isLinear,
+                int segments,
+                int tier,
+                float rating
+            ) in GetSampleMaps()
+        )
+        {
+            MenuValue item = AppendMap(mapName, isLinear, segments, tier, rating);
+            menu.Items.Add(new(MenuItemType.Button, item, data: mapId));
+        }
+
+        menu.Items.Add(new(MenuItemType.Choice, values: values));
+        menu.Items.Add(new(MenuItemType.Spacer));
+
+        foreach (
+            (
+                string mapName,
+                string mapId,
+                bool isLinear,
+                int segments,
+                int tier,
+                float rating
+            ) in GetSampleMaps()
+        )
+        {
+            MenuValue item = AppendMap(mapName, isLinear, segments, tier, rating);
+            menu.Items.Add(new(MenuItemType.Button, item, data: mapId));
+        }
+
+        Menu.Display(
+            player,
+            menu,
+            (menu, menuAction) => Console.WriteLine($"{menu.Player.PlayerName} -> {menuAction}")
+        );
+    }
+
+    private MenuValue AppendMap(string mapName, bool isLinear, int segments, int tier, float rating)
+    {
+        MenuValue item =
         [
-            new("wow", new Color().RainbowStrobe()),
-            new("header", Color.Green),
+            $"{mapName} ",
+            new MenuObject(
+                $"{(isLinear ? "L" : $"S{segments}")} ",
+                new MenuFormat(isLinear ? Color.DarkOrange : Color.Yellow)
+            ),
+            new MenuObject($"T{tier} ", new MenuFormat(TierToColor(tier))),
+            $"{rating:0.0}/5",
         ];
-
-        //var newMenu = new MenuBase(header: ["test"], options: options);
-
-        MenuItemOptions itemOptions = new() { Pinwheel = false };
-
-        List<MenuValue> menuFontSizes =
-        [
-            .. Enum.GetValues(typeof(MenuFontSize))
-                .Cast<MenuFontSize>()
-                .Select(fontSize => new MenuValue(fontSize.ToString(), data: fontSize)),
-        ];
-
-        MenuBase newMenu = new(
-            header: customHeader,
-            footer: ["footer: ", new("rasco", new Color().RainbowStrobeReversed(20))],
-            options: options
-        );
-
-        newMenu.Items.Add(new(MenuItemType.Choice, "h: ", values: menuFontSizes));
-        newMenu.Items[0].SelectedValue = (5, menuFontSizes[5]);
-
-        newMenu.Items.Add(new(MenuItemType.Choice, "i: ", values: menuFontSizes));
-        newMenu.Items[1].SelectedValue = (2, menuFontSizes[2]);
-
-        newMenu.Items.Add(new(MenuItemType.Choice, "f: ", values: menuFontSizes));
-        newMenu.Items[2].SelectedValue = (1, menuFontSizes[1]);
-
-        newMenu.Items.Add(
-            new(
-                MenuItemType.Choice,
-                values:
-                [
-                    "Dragonfire",
-                    "Acid Fade",
-                    "Turbo Peak",
-                    "Big Iron",
-                    new("Blood in the Water", new Color().RainbowStrobe()),
-                ],
-                options: itemOptions
-            )
-        );
-
-        newMenu.Items.Add(new(MenuItemType.Spacer));
-
-        newMenu.Items.Add(
-            new(
-                MenuItemType.Choice,
-                head: "choice: ",
-                values:
-                [
-                    new("ak-47", Color.Red, data: true),
-                    new("m4a1", new Color().RainbowStrobe(), data: 2),
-                    "3",
-                    "4",
-                    new("5", data: player),
-                ]
-            )
-        );
-
-        newMenu.Items.Add(new(MenuItemType.Spacer));
-
-        // Value callback
-        newMenu.Items.Add(
-            new(
-                MenuItemType.Button,
-                options: new() { Pinwheel = false },
-                values:
-                [
-                    new(
-                        "button",
-                        new Color().Rainbow(),
-                        data: "multi button1?",
-                        (player, menu, menuValue, menuAction) =>
-                        {
-                            if (menuAction == MenuAction.Select)
-                            {
-                                Console.WriteLine($"Selected, data: {menuValue.Data}");
-                            }
-                        }
-                    ),
-                    new(
-                        "button2",
-                        new Color().Rainbow(),
-                        data: "multi button2?",
-                        (player, menu, menuValue, menuAction) =>
-                        {
-                            if (menuAction == MenuAction.Select)
-                            {
-                                Console.WriteLine($"Selected, data: {menuValue.Data}");
-                            }
-                        }
-                    ),
-                ]
-            )
-        );
-
-        // Item callback
-        newMenu.Items.Add(
-            new(
-                MenuItemType.Button,
-                new("button", new Color().Rainbow()),
-                data: "single button",
-                callback: (player, menu, menuItem, menuAction) =>
-                {
-                    if (menuAction == MenuAction.Select)
-                    {
-                        Console.WriteLine($"Selected, data: {menuItem.Data}");
-                    }
-                }
-            )
-        );
-
-        newMenu.Items.Add(
-            new(
-                MenuItemType.Button,
-                new("button2 strobe fast: ", new Color().RainbowStrobe(254)),
-                ["1", "2"]
-            )
-        );
-
-        newMenu.Items.Add(new(MenuItemType.Button, values: ["1"], options: itemOptions));
-        //newMenu.Items.Add(new(MenuItemType.Button, new("button4 strobe fast reversed", new Color().RainbowStrobeReversed(254))));
-        //newMenu.Items.Add(new(MenuItemType.Button, new("button6 strobe slow reversed", new Color().RainbowStrobe(60))));
 
         /*
-        //newMenu.Items.Add(new(MenuItemType.Spacer, "lol"));
-        newMenu.Items.Add(new(MenuItemType.Button, new("green", Color.Green)));
-        newMenu.Items.Add(new(MenuItemType.Button, new("red", Color.Red)));
-        newMenu.Items.Add(new(MenuItemType.Button, "blank"));
-        newMenu.Items.Add(new(MenuItemType.Button, new("blue", Color.Blue)));
-
-        newMenu.Items.Add(new(MenuItemType.Button, new("full text", new Color().Rainbow())));
-        newMenu.Items.Add(new(MenuItemType.Button, new("strobe fast", new Color().RainbowStrobe(254))));
-        newMenu.Items.Add(new(MenuItemType.Button, new("strobe medium", new Color().RainbowStrobe(128))));
-        newMenu.Items.Add(new(MenuItemType.Button, new("strobe slow", new Color().RainbowStrobe(30))));
-        //newMenu.Items.Add(new(MenuItemType.Spacer));
+        List<MenuObject> item =
+        [
+            $"{mapName} ",
+            new(
+                $"{(isLinear ? "L" : $"S{segments}")} ",
+                isLinear ? Color.DarkOrange : Color.Yellow
+            ),
+            new($"T{tier} ", TierToColor(tier)),
+            $"{rating:0.0}/5",
+        ];
         */
-        for (int i = 0; i < 3; i++)
-        {
-            newMenu.Items.Add(new(MenuItemType.Button, $"button {i}"));
-        }
 
-        //newMenu.Items.Add(new(MenuItemType.Spacer));
-        //newMenu.Items.Add(new(MenuItemType.Text, "text"));
-        //newMenu.Items.Add(new(MenuItemType.Text, "text"));
-
-        Menu.Add(player, newMenu, OnMenuAction);
-
-        void OnMenuAction(CCSPlayerController player, MenuBase menu, MenuAction action)
-        {
-            if (action != MenuAction.Update)
-                return;
-
-            switch (menu.SelectedItem?.Index)
-            {
-                case 0:
-                    menu.Options.HeaderFontSize = (MenuFontSize)
-                        menu.SelectedItem?.Item.SelectedValue?.Value.Data!;
-                    break;
-
-                case 1:
-                    menu.Options.ItemFontSize = (MenuFontSize)
-                        menu.SelectedItem?.Item.SelectedValue?.Value.Data!;
-                    break;
-
-                case 2:
-                    menu.Options.FooterFontSize = (MenuFontSize)
-                        menu.SelectedItem?.Item.SelectedValue?.Value.Data!;
-                    break;
-            }
-        }
+        return item;
     }
+
+    private static List<(
+        string mapName,
+        string mapId,
+        bool isLinear,
+        int segments,
+        int tier,
+        float rating
+    )> GetSampleMaps() =>
+        [
+            ("surf_longhop2", "map_001", true, 5, 1, 4.2f),
+            ("surf_skrillcake_r", "map_002", false, 8, 2, 3.8f),
+            ("surf_comp_hopblocks", "map_003", true, 3, 1, 4.5f),
+            ("surf_synergy_x", "map_004", false, 12, 4, 4.7f),
+            ("surf_aztectemple", "map_005", true, 7, 3, 3.9f),
+            ("surf_minimountain", "map_006", false, 6, 2, 4.1f),
+            ("surf_embrace", "map_007", true, 4, 1, 4.3f),
+            ("surf_frozen_go", "map_008", false, 15, 5, 4.8f),
+            ("surf_hopbhop", "map_009", true, 2, 1, 3.7f),
+            ("surf_matrix_v2", "map_010", false, 10, 3, 4.4f),
+            ("surf_nightmare", "map_011", true, 9, 4, 4.6f),
+            ("surf_colors", "map_012", false, 5, 2, 3.6f),
+            ("surf_factory", "map_013", true, 6, 2, 4.0f),
+            ("surf_megabhop", "map_014", false, 20, 6, 4.9f),
+            ("surf_toxic", "map_015", true, 8, 3, 4.2f),
+        ];
+
+    private static Color TierToColor(int tier) =>
+        tier switch
+        {
+            1 => new Color().Strobe(Color.LightBlue, Color.Aqua),
+            2 => new Color().Strobe(Color.Blue, Color.DodgerBlue),
+            3 => new Color().Strobe(Color.Purple, Color.MediumPurple),
+            4 => new Color().Strobe(Color.Pink, Color.Magenta),
+            5 => new Color().Strobe(Color.DarkRed, Color.Crimson),
+            6 => new Color().Strobe(Color.Yellow, Color.Orange),
+            _ => Color.White,
+        };
 }

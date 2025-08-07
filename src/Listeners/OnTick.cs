@@ -9,10 +9,10 @@ internal static class OnTickListener
 
     private static void OnTick()
     {
-        foreach ((int playerSlot, (MenuBase menu, string html)) in Menu._currentMenu)
+        foreach ((int playerSlot, (MenuBase menu, string html)) in Menu.CurrentMenus)
         {
             if (
-                !Menu._players.TryGetValue(playerSlot, out CCSPlayerController? player)
+                !Menu.Players.TryGetValue(playerSlot, out CCSPlayerController? player)
                 || !player.IsValid
                 || player.Connected != PlayerConnectedState.PlayerConnected
             )
@@ -21,8 +21,8 @@ internal static class OnTickListener
                 continue;
             }
 
-            string result = Menu.RaiseOnPrintMenu(player, menu, html);
-            player.PrintToCenterHtml(result);
+            string result = Menu.RaiseOnPrintMenu(menu, html);
+            player.PrintToCenterHtml(result, 1);
         }
     }
 }

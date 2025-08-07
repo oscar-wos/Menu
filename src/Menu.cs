@@ -12,33 +12,53 @@ public static partial class Menu
     internal const int MENU_HEIGHT = 140;
     internal const int MENU_LENGTH = 300;
 
-    private static readonly Timer _menuTimer = new(ProcessMenu, null, 0, 100);
+    private static readonly StringBuilder _menuBuilder = new(8192);
 
-    internal static readonly Dictionary<int, CCSPlayerController> _players = [];
-    internal static readonly Dictionary<int, List<MenuBase>> _menus = [];
-    internal static readonly Dictionary<int, (MenuBase menu, string html)> _currentMenu = [];
+    private static readonly Dictionary<int, CCSPlayerController> _players = [];
+    private static readonly Dictionary<int, List<MenuBase>> _menus = [];
+    private static readonly Dictionary<int, (MenuBase menu, string html)> _currentMenus = [];
+
+    public static readonly IReadOnlyDictionary<int, CCSPlayerController> Players = _players;
+
+    public static readonly IReadOnlyDictionary<int, (MenuBase menu, string html)> CurrentMenus =
+        _currentMenus;
 
     public static event EventHandler<MenuEvent>? OnPrintMenu;
 
     static Menu()
     {
-        OnSayListener.Register();
         OnTickListener.Register();
         RunCommandHook.Register();
         SpecModeHook.Register();
+
+        Thread menuThread = new(MenuThread)
+        {
+            IsBackground = true,
+            Priority = ThreadPriority.Lowest,
+        };
+
+        menuThread.Start();
     }
 
-    internal static string RaiseOnPrintMenu(CCSPlayerController player, MenuBase menu, string html)
+    internal static string RaiseOnPrintMenu(MenuBase menu, string html)
     {
-        MenuEvent menuEvent = new(player, menu, html);
+        MenuEvent menuEvent = new(menu, html);
         OnPrintMenu?.Invoke(null, menuEvent);
         return menuEvent.String;
     }
 
-    private static void ProcessMenu(object? state)
+    private static void MenuThread()
     {
-        Rainbow.UpdateRainbowHue();
+        while (true)
+        {
+            ProcessMenus();
+            Rainbow.UpdateHue();
+            Thread.Sleep(100);
+        }
+    }
 
+    internal static void ProcessMenus()
+    {
         foreach ((int playerSlot, List<MenuBase> menus) in _menus)
         {
             if (menus.Count == 0)
@@ -47,174 +67,203 @@ public static partial class Menu
             }
 
             MenuBase menu = menus[0];
-
-            StringBuilder html = new();
-            _ = html.Append(' ');
-
-            if (menu.Header is not null)
-            {
-                _ = html.Append(menu.Options.HeaderSizeHtml());
-
-                foreach (MenuValue header in menu.Header)
-                {
-                    _ = html.Append(header.ToString());
-                }
-
-                if (menu.Options.DisplayItemsInHeader && menu.SelectedItem is not null)
-                {
-                    _ = html.Append(
-                        $"</font>{menu.Options.FooterSizeHtml()} {menu.SelectedItem.Value.Index + 1}/{menu.Items.Count}"
-                    );
-                }
-
-                _ = html.Append("<br>");
-            }
-
-            int start = 0;
-            int end = menu.Items.Count;
-            int selectedIdx = menu.SelectedItem?.Index ?? 0;
-
-            if (menu.Items.Count > menu.Options._availableItems)
-            {
-                int half = menu.Options._availableItems / 2;
-                start = Math.Max(0, selectedIdx - half);
-                end = Math.Min(menu.Items.Count, start + menu.Options._availableItems);
-
-                if (end - start < menu.Options._availableItems)
-                {
-                    start = Math.Max(0, end - menu.Options._availableItems);
-                }
-            }
-
-            if (menu.Items.Count > 0)
-            {
-                _ = html.Append("</font>").Append(menu.Options.ItemSizeHtml());
-            }
-
-            for (int i = start; i < end; i++)
-            {
-                MenuItem item = menu.Items[i];
-
-                if (item.Type is MenuItemType.Spacer)
-                {
-                    _ = html.Append(' ').Append("<br>");
-                    continue;
-                }
-
-                if (item == menu.SelectedItem?.Item)
-                {
-                    _ = html.Append(menu.Options.Cursor[0].ToString());
-                }
-
-                if (
-                    item.Type is MenuItemType.Button
-                    && (item.Values is not List<MenuValue> { Count: > 0 })
-                )
-                {
-                    _ = html.Append(FormatSelector(menu, item, 0));
-                }
-
-                if (item.Head is not null)
-                {
-                    _ = html.Append(item.Head.ToString());
-                }
-
-                switch (item.Type)
-                {
-                    case MenuItemType.Button or MenuItemType.Choice or MenuItemType.ChoiceBool:
-                        _ = html.Append(FormatValues(menu, item));
-                        break;
-                }
-
-                if (item.Tail is not null)
-                {
-                    _ = html.Append(item.Tail.ToString());
-                }
-
-                if (
-                    item.Type == MenuItemType.Button
-                    && (item.Values is not List<MenuValue> { Count: > 0 })
-                )
-                {
-                    _ = html.Append(FormatSelector(menu, item, 1));
-                }
-
-                if (item == menu.SelectedItem?.Item)
-                {
-                    _ = html.Append(menu.Options.Cursor[1].ToString());
-                }
-
-                if (i < end - 1 || menu.Footer is not null)
-                {
-                    _ = html.Append("<br>");
-                }
-            }
-
-            if (menu.Footer is not null)
-            {
-                _ = html.Append("</font>").Append(menu.Options.FooterSizeHtml());
-
-                foreach (MenuValue footer in menu.Footer)
-                {
-                    _ = html.Append(footer.ToString());
-                }
-            }
-
-            _currentMenu[playerSlot] = (menu, html.ToString());
+            _currentMenus[playerSlot] = (menu, RenderMenu(menu));
         }
     }
 
-    private static string FormatValues(MenuBase menu, MenuItem item)
+    private static string RenderMenu(MenuBase menu)
     {
-        if (item.Values is not List<MenuValue> { Count: > 0 })
+        _ = _menuBuilder.Clear();
+        _ = _menuBuilder.Append(' ');
+
+        if (menu.Header is not null)
         {
-            return "";
+            RenderHeader(_menuBuilder, menu, menu.Header);
         }
 
-        int currentIndex = item.SelectedValue?.Index ?? 0;
-        int selectedLength = item.Values[currentIndex].Value.Length;
-        int remainingChars = menu.Options._availableChars - selectedLength;
+        RenderBody(_menuBuilder, menu);
 
-        if (item.Head is not null)
+        if (menu.Footer is not null)
         {
-            remainingChars -= item.Head.Value.Length;
+            RenderFooter(_menuBuilder, menu, menu.Footer);
         }
 
-        if (item.Tail is not null)
+        return _menuBuilder.ToString();
+    }
+
+    private static void RenderHeader(StringBuilder stringBuilder, MenuBase menu, MenuValue header)
+    {
+        _ = stringBuilder.Append(menu.Options.HeaderSizeHtml);
+        header.Render(stringBuilder);
+
+        if (menu.Options.DisplayItemsInHeader && menu.SelectedItem is not null)
         {
-            remainingChars -= item.Tail.Value.Length;
+            _ = stringBuilder.Append(
+                $"</font>{menu.Options.FooterSizeHtml} {menu.SelectedItem.Value.Index + 1}/{menu.Items.Count}"
+            );
+        }
+
+        _ = stringBuilder.Append("<br>");
+    }
+
+    private static void RenderFooter(StringBuilder stringBuilder, MenuBase menu, MenuValue footer)
+    {
+        _ = stringBuilder.Append($"</font>{menu.Options.FooterSizeHtml}");
+        footer.Render(stringBuilder);
+    }
+
+    private static void RenderBody(StringBuilder stringBuilder, MenuBase menu)
+    {
+        int start = 0;
+        int end = menu.Items.Count;
+        int selectedIndex = menu.SelectedItem?.Index ?? 0;
+
+        if (menu.Items.Count > menu.Options.AvailableItems)
+        {
+            int half = menu.Options.AvailableItems / 2;
+            start = Math.Max(0, selectedIndex - half);
+            end = Math.Min(menu.Items.Count, start + menu.Options.AvailableItems);
+
+            if (end - start < menu.Options.AvailableItems)
+            {
+                start = Math.Max(0, end - menu.Options.AvailableItems);
+            }
+        }
+
+        if (menu.Items.Count != 0)
+        {
+            _ = stringBuilder.Append($"</font>{menu.Options.ItemSizeHtml}");
+        }
+
+        for (int i = start; i < end; i++)
+        {
+            RenderItem(stringBuilder, menu, menu.Items[i]);
+
+            if (i < end - 1 || menu.Footer is not null)
+            {
+                _ = stringBuilder.Append("<br>");
+            }
+        }
+    }
+
+    private static void RenderItem(StringBuilder stringBuilder, MenuBase menu, MenuItem menuItem)
+    {
+        if (menuItem.Type is MenuItemType.Spacer)
+        {
+            _ = stringBuilder.Append(' ');
+            return;
+        }
+
+        bool isSelected = menuItem == menu.SelectedItem?.Item;
+
+        bool isSingleButton =
+            menuItem.Type is MenuItemType.Button && (menuItem.Values is not { Count: > 0 });
+
+        if (isSelected)
+        {
+            menu.Options.Cursor[0].Render(stringBuilder);
+        }
+
+        if (isSingleButton)
+        {
+            RenderSelector(stringBuilder, menu, menuItem, 0);
+        }
+
+        menuItem.Head?.Render(stringBuilder);
+        FormatType(stringBuilder, menu, menuItem);
+        menuItem.Tail?.Render(stringBuilder);
+
+        if (isSingleButton)
+        {
+            RenderSelector(stringBuilder, menu, menuItem, 1);
+        }
+
+        if (isSelected)
+        {
+            menu.Options.Cursor[1].Render(stringBuilder);
+        }
+    }
+
+    private static void RenderSelector(
+        StringBuilder stringBuilder,
+        MenuBase menu,
+        MenuItem menuItem,
+        int index
+    )
+    {
+        if (menuItem.Type is MenuItemType.Button && menuItem != menu.SelectedItem?.Item)
+        {
+            return;
+        }
+
+        menu.Options.Selector[index].Render(stringBuilder);
+    }
+
+    private static void FormatType(StringBuilder stringBuilder, MenuBase menu, MenuItem menuItem)
+    {
+        switch (menuItem.Type)
+        {
+            case MenuItemType.Button or MenuItemType.Choice:
+                FormatValues(stringBuilder, menu, menuItem);
+                break;
+        }
+    }
+
+    private static void FormatValues(StringBuilder stringBuilder, MenuBase menu, MenuItem menuItem)
+    {
+        if (menuItem.Values is not { Count: > 0 })
+        {
+            return;
+        }
+
+        int currentIndex = menuItem.SelectedValue?.Index ?? 0;
+        int prevIndex = (currentIndex == 0) ? menuItem.Values.Count - 1 : currentIndex - 1;
+        int nextIndex = (currentIndex == menuItem.Values.Count - 1) ? 0 : currentIndex + 1;
+
+        int selectedLength = menuItem.Values[currentIndex].Length();
+        int remainingChars = menu.Options.AvailableChars - selectedLength;
+
+        if (menuItem.Head is not null)
+        {
+            remainingChars -= menuItem.Head.Length();
+        }
+
+        if (menuItem.Tail is not null)
+        {
+            remainingChars -= menuItem.Tail.Length();
         }
 
         int splitChars = remainingChars / 2 < 1 ? 1 : remainingChars / 2;
-        int prevIndex = (currentIndex == 0) ? item.Values.Count - 1 : currentIndex - 1;
-        int nextIndex = (currentIndex == item.Values.Count - 1) ? 0 : currentIndex + 1;
 
-        TrimValue(item.Values[prevIndex], splitChars);
-        TrimValue(item.Values[nextIndex], splitChars);
+        TrimValue(menuItem.Values[prevIndex], splitChars);
+        TrimValue(menuItem.Values[nextIndex], splitChars);
+
         TrimValue(
-            item.Values[currentIndex],
-            remainingChars + selectedLength - (splitChars * 2) + 1
+            menuItem.Values[currentIndex],
+            remainingChars + selectedLength - (splitChars * 2)
         );
 
-        StringBuilder result = new();
-
-        string BuildSelector() =>
-            $"{FormatSelector(menu, item, 0)}{item.Values[currentIndex].ToStringHighlighted(menu.Options.Highlight)}{FormatSelector(menu, item, 1)}";
-
-        if (item.Options.Pinwheel || (currentIndex > 0 && currentIndex < item.Values.Count - 1))
+        if (
+            menuItem.Options.Pinwheel
+            || (currentIndex > 0 && currentIndex < menuItem.Values.Count - 1)
+        )
         {
-            _ = result.Append(
-                $"{item.Values[prevIndex]} {BuildSelector()} {item.Values[nextIndex]}"
-            );
+            menuItem.Values[prevIndex].Render(stringBuilder);
+            _ = stringBuilder.Append(' ');
+            FormatSelected(stringBuilder, menu, menuItem, currentIndex);
+            _ = stringBuilder.Append(' ');
+            menuItem.Values[nextIndex].Render(stringBuilder);
         }
         else if (currentIndex == 0)
         {
-            _ = result.Append(BuildSelector());
+            FormatSelected(stringBuilder, menu, menuItem, currentIndex);
 
-            for (int i = 0; i < 2 && i < item.Values.Count - 1; i++)
+            for (int i = 0; i < 2 && i < menuItem.Values.Count - 1; i++)
             {
-                TrimValue(item.Values[i + 1], splitChars);
-                _ = result.Append($" {item.Values[i + 1]}");
+                TrimValue(menuItem.Values[i + 1], splitChars);
+
+                _ = stringBuilder.Append(' ');
+                menuItem.Values[i + 1].Render(stringBuilder);
             }
         }
         else
@@ -223,32 +272,55 @@ public static partial class Menu
             {
                 if (currentIndex - i >= 0)
                 {
-                    TrimValue(item.Values[currentIndex - i], splitChars);
-                    _ = result.Append($"{item.Values[currentIndex - i]} ");
+                    TrimValue(menuItem.Values[currentIndex - i], splitChars);
+
+                    menuItem.Values[currentIndex - i].Render(stringBuilder);
+                    _ = stringBuilder.Append(' ');
                 }
+
+                FormatSelected(stringBuilder, menu, menuItem, currentIndex);
             }
-
-            _ = result.Append(BuildSelector());
         }
-
-        return result.ToString();
     }
 
-    private static string FormatSelector(MenuBase menu, MenuItem item, int index) =>
-        item.Type is MenuItemType.Button or MenuItemType.ChoiceBool
-        && item != menu.SelectedItem?.Item
-            ? ""
-            : menu.Options.Selector[index].ToString();
-
-    private static void TrimValue(MenuValue value, int maxChars)
+    private static void FormatSelected(
+        StringBuilder stringBuilder,
+        MenuBase menu,
+        MenuItem menuItem,
+        int index
+    )
     {
-        if (value.Value.Length == 1 || value.Value.Length < maxChars)
+        RenderSelector(stringBuilder, menu, menuItem, 0);
+        menuItem.Values![index].Render(stringBuilder, menu.Options.Highlight);
+        RenderSelector(stringBuilder, menu, menuItem, 1);
+    }
+
+    private static void TrimValue(MenuValue menuValue, int remainingChars)
+    {
+        remainingChars = Math.Max(1, remainingChars);
+
+        for (int i = 0; i < menuValue.Objects.Count; i++)
         {
-            value.Display = value.Value;
+            MenuObject menuObject = menuValue.Objects[i];
+            TrimObject(menuObject, remainingChars);
+            remainingChars -= menuObject.Display.Length;
         }
-        else
+    }
+
+    private static void TrimObject(MenuObject menuObject, int remainingChars)
+    {
+        if (remainingChars < 1)
         {
-            value.Display = maxChars < 1 ? "." : value.Value[..(maxChars - 1)] + ".";
+            menuObject.Display = string.Empty;
+            return;
         }
+
+        if (menuObject.Text.Length <= remainingChars)
+        {
+            menuObject.Display = menuObject.Text;
+            return;
+        }
+
+        menuObject.Display = menuObject.Text[..(remainingChars - 1)] + '.';
     }
 }
