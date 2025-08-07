@@ -18,11 +18,6 @@ public static partial class Menu
 
         for (int i = 0; i < menu.Items.Count; i++)
         {
-            if (menu.Items[i].SelectedValue is null && menu.Items[i]?.Values?[0] is { } value)
-            {
-                menu.Items[i].SelectedValue = (0, value);
-            }
-
             if (menu.SelectedItem is null && MenuBase.IsSelectable(menu.Items[i]))
             {
                 menu.SelectedItem = (i, menu.Items[i]);

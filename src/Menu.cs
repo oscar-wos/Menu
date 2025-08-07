@@ -169,9 +169,9 @@ public static partial class Menu
             RenderSelector(stringBuilder, menu, menuItem, 0);
         }
 
-        menuItem.Head?.Render(stringBuilder);
+        menuItem.Head?.Render(stringBuilder, isSelected ? menu.Options.Highlight : null);
         FormatType(stringBuilder, menu, menuItem);
-        menuItem.Tail?.Render(stringBuilder);
+        menuItem.Tail?.Render(stringBuilder, isSelected ? menu.Options.Highlight : null);
 
         if (isSingleButton)
         {

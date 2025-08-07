@@ -5,43 +5,22 @@ using RMenu.Enums;
 
 namespace RMenu;
 
-public class MenuValue : IEnumerable<MenuObject>
+public class MenuValue
 {
     public static implicit operator MenuValue(List<MenuObject> menuObjects) => new(menuObjects);
-
-    public IEnumerator<MenuObject> GetEnumerator() => Objects.GetEnumerator();
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    public void Add(string text) => Objects.Add(new MenuObject(text));
-
-    public void Add(MenuObject menuObject) => Objects.Add(menuObject);
 
     public List<MenuObject> Objects { get; set; } = [];
     public object? Data { get; set; }
     public Action<MenuBase, MenuValue, MenuAction>? Callback { get; }
 
-    public MenuValue() { }
-
     public MenuValue(
         string text,
-        Color? color = null,
+        MenuFormat? format = null,
         object? data = null,
         Action<MenuBase, MenuValue, MenuAction>? callback = null
     )
     {
-        Objects = [new MenuObject(text, new MenuFormat(color))];
-        Data = data;
-        Callback = callback;
-    }
-
-    public MenuValue(
-        IEnumerable<string> texts,
-        object? data = null,
-        Action<MenuBase, MenuValue, MenuAction>? callback = null
-    )
-    {
-        Objects = [.. texts.Select(t => new MenuObject(t))];
+        Objects = [new MenuObject(text, format)];
         Data = data;
         Callback = callback;
     }

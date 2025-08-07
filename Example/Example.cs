@@ -15,6 +15,17 @@ public class Example : BasePlugin
     public override void Load(bool hotReload)
     {
         AddCommand("css_test", "", CommandTest);
+        AddCommand("css_hud", "", CommandHud);
+    }
+
+    private void CommandHud(CCSPlayerController? player, CommandInfo info)
+    {
+        if (player is null || !player.IsValid)
+        {
+            return;
+        }
+
+        player.PrintToCenterHtml(info.ArgString);
     }
 
     private void CommandTest(CCSPlayerController? player, CommandInfo info)
@@ -24,9 +35,19 @@ public class Example : BasePlugin
             return;
         }
 
-        MenuValue header = ["new", new MenuObject("header", new MenuFormat(Color.Green))];
-        MenuValue footer = new("kzg", new Color().Strobe(Color.Red, Color.Purple));
-        MenuOptions options = new() { BlockMovement = true, DisplayItemsInHeader = true };
+        List<MenuObject> header =
+        [
+            "new",
+            new MenuObject("header", new MenuFormat(color: Color.Green)),
+        ];
+
+        MenuValue footer = new("kzg", new MenuFormat(new Color().Strobe(Color.Red, Color.Purple)));
+        MenuOptions options = new()
+        {
+            BlockMovement = true,
+            DisplayItemsInHeader = true,
+            Highlight = new MenuFormat { Color = Color.Green, Bold = true },
+        };
 
         MenuBase menu = new(header: header, footer: footer, options: options);
 
@@ -44,7 +65,7 @@ public class Example : BasePlugin
         )
         {
             MenuValue item = AppendMap(mapName, isLinear, segments, tier, rating);
-            menu.Items.Add(new(MenuItemType.Button, item, data: mapId));
+            values.Add(item);
         }
 
         menu.Items.Add(new(MenuItemType.Choice, values: values));
@@ -74,15 +95,15 @@ public class Example : BasePlugin
 
     private MenuValue AppendMap(string mapName, bool isLinear, int segments, int tier, float rating)
     {
-        MenuValue item =
+        List<MenuObject> item =
         [
             $"{mapName} ",
             new MenuObject(
                 $"{(isLinear ? "L" : $"S{segments}")} ",
-                new MenuFormat(isLinear ? Color.DarkOrange : Color.Yellow)
+                new MenuFormat(isLinear ? Color.DarkOrange : Color.Yellow, canHighlight: false)
             ),
-            new MenuObject($"T{tier} ", new MenuFormat(TierToColor(tier))),
-            $"{rating:0.0}/5",
+            new MenuObject($"T{tier} ", new MenuFormat(TierToColor(tier), canHighlight: false)),
+            new MenuObject($"{rating:0.0}/5", new MenuFormat(italic: true, canHighlight: false)),
         ];
 
         /*

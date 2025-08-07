@@ -14,7 +14,15 @@ public class MenuObject(string text, MenuFormat? format = null)
 
     internal void Render(StringBuilder stringBuilder, MenuFormat? highlight = null)
     {
-        /*
+        MenuFormat format = Format;
+
+        if (highlight is not null && Format.CanHighlight)
+        {
+            format = highlight;
+        }
+
+        Color color = format.Color;
+
         switch (color.A)
         {
             case 0:
@@ -34,8 +42,7 @@ public class MenuObject(string text, MenuFormat? format = null)
         }
 
         _ = stringBuilder.Append(
-            $"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\">{Display}</font>"
+            $"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\"><font class=\"{(format.Italic ? "stratum-bold-italic" : format.Bold ? "stratum-bold" : "stratum")}\">{Display}</font></font>"
         );
-        */
     }
 }
