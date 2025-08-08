@@ -5,7 +5,6 @@ public enum MenuAction
     Start,
     Select,
     Update,
-    Input,
-    Cancel,
+    Exit,
     Assist,
 }

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace RMenu.Structs;
 
 [StructLayout(LayoutKind.Explicit)]
-public unsafe struct CBaseUserCmdPb
+public unsafe struct CBaseUserCmdPB
 {
     [FieldOffset(0x50)]
     public float m_flForwardMove;

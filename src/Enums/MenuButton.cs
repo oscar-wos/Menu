@@ -7,7 +7,6 @@ public enum MenuButton
     Left,
     Right,
     Select,
-    Back,
     Exit,
     Assist,
 }

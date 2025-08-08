@@ -1,74 +1,78 @@
-using CounterStrikeSharp.API.Core;
 using RMenu.Enums;
 
 namespace RMenu;
 
-public class MenuItem(
-    MenuItemType type,
-    MenuValue? head = null,
-    List<MenuValue>? values = null,
-    MenuValue? tail = null,
-    MenuItemOptions? options = null,
-    object? data = null,
-    Action<CCSPlayerController, MenuBase, MenuItem, MenuAction>? callback = null
-)
+public class MenuItem
 {
-    public MenuItemType Type { get; set; } = type;
-    public MenuValue? Head { get; set; } = head;
-    public MenuValue? Tail { get; set; } = tail;
-    public MenuItemOptions Options { get; init; } = options ?? new MenuItemOptions();
-    public object? Data { get; set; } = data;
-    public Action<CCSPlayerController, MenuBase, MenuItem, MenuAction>? Callback { get; } =
-        callback;
-    public List<MenuValue>? Values { get; set; } = values;
+    private List<MenuValue>? _values;
     public (int Index, MenuValue Value)? SelectedValue { get; set; } = null;
+
+    public List<MenuValue>? Values
+    {
+        get => _values;
+        set
+        {
+            _values = value;
+
+            if (_values is { Count: > 0 })
+            {
+                SelectedValue = (0, _values[0]);
+            }
+        }
+    }
+
+    public MenuItemType Type { get; set; }
+    public MenuValue? Head { get; set; }
+    public MenuValue? Tail { get; set; }
+    public MenuItemOptions Options { get; init; }
+    public object? Data { get; set; }
+    public Action<MenuBase, MenuItem, MenuAction>? Callback { get; }
+
+    public MenuItem(
+        MenuItemType type,
+        MenuValue? head = null,
+        List<MenuValue>? values = null,
+        MenuValue? tail = null,
+        MenuItemOptions? options = null,
+        object? data = null,
+        Action<MenuBase, MenuItem, MenuAction>? callback = null
+    )
+    {
+        Type = type;
+        Head = head;
+        Tail = tail;
+        Options = options ?? new MenuItemOptions();
+        Data = data;
+        Callback = callback;
+        Values = values;
+    }
 
     public bool Input(MenuButton button)
     {
-        if (Values is null || Values.Count == 0)
+        if (_values is null || _values.Count == 0)
         {
             return false;
         }
 
-        SelectedValue ??= (0, Values[0]);
-        int newIdx = SelectedValue.Value.Index;
+        SelectedValue ??= (0, _values[0]);
 
-        if (Type is MenuItemType.Button or MenuItemType.Choice or MenuItemType.ChoiceBool)
+        int newIndex = button switch
         {
-            switch (button)
-            {
-                case MenuButton.Left:
-                    if (Options.Pinwheel)
-                    {
-                        newIdx = (newIdx - 1 + Values.Count) % Values.Count;
-                    }
-                    else if (newIdx > 0)
-                    {
-                        newIdx--;
-                    }
+            MenuButton.Left => Options.Pinwheel
+                ? (SelectedValue.Value.Index - 1 + _values.Count) % _values.Count
+                : Math.Max(0, SelectedValue.Value.Index - 1),
+            MenuButton.Right => Options.Pinwheel
+                ? (SelectedValue.Value.Index + 1) % _values.Count
+                : Math.Min(_values.Count - 1, SelectedValue.Value.Index + 1),
+            _ => SelectedValue.Value.Index,
+        };
 
-                    break;
-
-                case MenuButton.Right:
-                    if (Options.Pinwheel)
-                    {
-                        newIdx = (newIdx + 1) % Values.Count;
-                    }
-                    else if (newIdx < Values.Count - 1)
-                    {
-                        newIdx++;
-                    }
-
-                    break;
-            }
-        }
-
-        if (newIdx == SelectedValue.Value.Index)
+        if (newIndex == SelectedValue.Value.Index)
         {
             return false;
         }
 
-        SelectedValue = (newIdx, Values[newIdx]);
+        SelectedValue = (newIndex, _values[newIndex]);
         return true;
     }
 }

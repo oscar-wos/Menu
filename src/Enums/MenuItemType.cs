@@ -6,8 +6,4 @@ public enum MenuItemType
     Spacer,
     Choice,
     Button,
-    Bool,
-    ChoiceBool,
-    Slider,
-    Input,
 }

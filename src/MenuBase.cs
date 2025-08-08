@@ -3,181 +3,140 @@ using RMenu.Enums;
 
 namespace RMenu;
 
-public class MenuBase
+public class MenuBase(
+    MenuValue? header = null,
+    MenuValue? footer = null,
+    MenuOptions? options = null,
+    Action<MenuBase, MenuAction>? callback = null
+)
 {
-    public long[] InputDelay { get; } = new long[Enum.GetValues(typeof(MenuButton)).Length];
-    public MenuOptions Options { get; init; }
-    public List<MenuValue>? Header { get; set; }
-    public List<MenuValue>? Footer { get; set; }
+    private readonly long[] _lastInput = new long[Enum.GetValues(typeof(MenuButton)).Length];
+
+    public CCSPlayerController Player { get; set; } = null!;
     public List<MenuItem> Items { get; set; } = [];
     public (int Index, MenuItem Item)? SelectedItem { get; set; } = null;
-    public Action<CCSPlayerController, MenuBase, MenuAction>? Callback { get; set; }
-    public bool Text { get; set; } = false;
 
-    public MenuBase(MenuValue? header = null, MenuValue? footer = null, MenuOptions? options = null)
+    public MenuValue? Header { get; set; } = header;
+    public MenuValue? Footer { get; set; } = footer;
+    public MenuOptions Options { get; init; } = options ?? new MenuOptions();
+    public Action<MenuBase, MenuAction>? Callback { get; set; } = callback;
+
+    internal void Input(MenuButton button)
     {
-        Header = header is null ? null : [header];
-        Footer = footer is null ? null : [footer];
-        Options = options ?? new MenuOptions();
-    }
-
-    public MenuBase(
-        IEnumerable<MenuValue>? header = null,
-        IEnumerable<MenuValue>? footer = null,
-        MenuOptions? options = null
-    )
-    {
-        Header = header?.ToList();
-        Footer = footer?.ToList();
-        Options = options ?? new MenuOptions();
-    }
-
-    public MenuBase(MenuOptions? options = null) => Options = options ?? new MenuOptions();
-
-    public MenuBase() => Options = new MenuOptions();
-
-    public static bool IsSelectable(MenuItem item) =>
-        item.Type
-            is MenuItemType.Choice
-                or MenuItemType.Button
-                or MenuItemType.Bool
-                or MenuItemType.ChoiceBool
-                or MenuItemType.Slider
-                or MenuItemType.Input;
-
-    public void Input(CCSPlayerController player, MenuButton button)
-    {
-        switch (button)
+        if (_lastInput[(int)button] + Options.ButtonsDelay > Environment.TickCount64)
         {
-            case MenuButton.Assist:
-                Invoke(
-                    player,
-                    this,
-                    SelectedItem?.Item,
-                    SelectedItem?.Item.SelectedValue?.Value,
-                    MenuAction.Assist
-                );
+            if (!Options.Continuous[button])
+            {
+                _lastInput[(int)button] = Environment.TickCount64;
+            }
 
-                break;
+            return;
+        }
 
-            case MenuButton.Up when !Text:
-                if (SelectedItem is null)
-                {
-                    return;
-                }
+        Action? action = button switch
+        {
+            MenuButton.Up => HandleUp,
+            MenuButton.Down => HandleDown,
+            MenuButton.Left => HandleLeft,
+            MenuButton.Right => HandleRight,
+            MenuButton.Select => HandleSelect,
+            MenuButton.Exit => HandleExit,
+            MenuButton.Assist => HandleAssist,
+            _ => null,
+        };
 
-                for (int newIndex = SelectedItem.Value.Index - 1; newIndex >= 0; newIndex--)
-                {
-                    if (SelectItem(newIndex))
-                    {
-                        Invoke(
-                            player,
-                            this,
-                            SelectedItem?.Item,
-                            SelectedItem?.Item.SelectedValue?.Value,
-                            MenuAction.Update
-                        );
+        _lastInput[(int)button] = Environment.TickCount64;
+        action?.Invoke();
+    }
 
-                        break;
-                    }
-                }
+    private void HandleUp()
+    {
+        if (SelectedItem?.Index is not { } index)
+        {
+            return;
+        }
 
-                break;
-
-            case MenuButton.Down when !Text:
-                if (SelectedItem is null)
-                {
-                    return;
-                }
-
-                for (
-                    int newIndex = SelectedItem.Value.Index + 1;
-                    newIndex < Items.Count;
-                    newIndex++
-                )
-                {
-                    if (SelectItem(newIndex))
-                    {
-                        Invoke(
-                            player,
-                            this,
-                            SelectedItem?.Item,
-                            SelectedItem?.Item.SelectedValue?.Value,
-                            MenuAction.Update
-                        );
-
-                        break;
-                    }
-                }
-
-                break;
-
-            case MenuButton.Left
-            or MenuButton.Right when !Text:
-                if (SelectedItem is null)
-                {
-                    return;
-                }
-
-                if (SelectedItem.Value.Item.Input(button))
-                {
-                    Invoke(
-                        player,
-                        this,
-                        SelectedItem?.Item,
-                        SelectedItem?.Item.SelectedValue?.Value,
-                        MenuAction.Update
-                    );
-                }
-
-                break;
-
-            case MenuButton.Select when !Text:
-                if (SelectedItem is null)
-                {
-                    return;
-                }
-
-                Invoke(
-                    player,
-                    this,
-                    SelectedItem?.Item,
-                    SelectedItem?.Item.SelectedValue?.Value,
-                    MenuAction.Select
-                );
-
-                break;
-
-            case MenuButton.Exit when Options.Exitable:
-                Invoke(
-                    player,
-                    this,
-                    SelectedItem?.Item,
-                    SelectedItem?.Item.SelectedValue?.Value,
-                    MenuAction.Cancel
-                );
-
-                Menu.Clear(player);
-                break;
+        for (int newIndex = index - 1; newIndex >= 0; newIndex--)
+        {
+            if (IsSelected(newIndex))
+            {
+                Invoke(MenuAction.Update);
+                return;
+            }
         }
     }
 
-    [Obsolete("Use MenuBase.Items.Add() (List<MenuItem>)")]
-    public void AddItem(MenuItem item) => Items.Add(item);
+    private void HandleDown()
+    {
+        if (SelectedItem?.Index is not { } index)
+        {
+            return;
+        }
 
-    private bool SelectItem(int index) =>
+        for (int newIndex = index + 1; newIndex < Items.Count; newIndex++)
+        {
+            if (IsSelected(newIndex))
+            {
+                Invoke(MenuAction.Update);
+                return;
+            }
+        }
+    }
+
+    private void HandleLeft()
+    {
+        if (SelectedItem?.Item is not { } menuItem)
+        {
+            return;
+        }
+
+        if (menuItem.Input(MenuButton.Left))
+        {
+            Invoke(MenuAction.Update);
+        }
+    }
+
+    private void HandleRight()
+    {
+        if (SelectedItem?.Item is not { } menuItem)
+        {
+            return;
+        }
+
+        if (menuItem.Input(MenuButton.Right))
+        {
+            Invoke(MenuAction.Update);
+        }
+    }
+
+    private void HandleSelect() => Invoke(MenuAction.Select);
+
+    private void HandleExit()
+    {
+        if (!Options.Exitable)
+        {
+            return;
+        }
+
+        Invoke(MenuAction.Exit);
+        Menu.Clear(Player);
+    }
+
+    private void HandleAssist() => Invoke(MenuAction.Assist);
+
+    private void Invoke(MenuAction menuAction)
+    {
+        MenuItem? menuItem = SelectedItem?.Item;
+        MenuValue? menuValue = menuItem?.SelectedValue?.Value;
+
+        menuValue?.Callback?.Invoke(this, menuValue, menuAction);
+        menuItem?.Callback?.Invoke(this, menuItem, menuAction);
+        Callback?.Invoke(this, menuAction);
+    }
+
+    private bool IsSelected(int index) =>
         IsSelectable(Items[index]) && (SelectedItem = (index, Items[index])) != null;
 
-    private static void Invoke(
-        CCSPlayerController player,
-        MenuBase menu,
-        MenuItem? menuItem,
-        MenuValue? menuValue,
-        MenuAction menuAction
-    )
-    {
-        menu.Callback?.Invoke(player, menu, menuAction);
-        menuItem?.Callback?.Invoke(player, menu, menuItem, menuAction);
-        menuValue?.Callback?.Invoke(player, menu, menuValue, menuAction);
-    }
+    internal static bool IsSelectable(MenuItem menuItem) =>
+        menuItem.Type is MenuItemType.Choice or MenuItemType.Button;
 }
