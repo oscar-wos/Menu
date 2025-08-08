@@ -129,9 +129,9 @@ public class MenuBase(
         MenuItem? menuItem = SelectedItem?.Item;
         MenuValue? menuValue = menuItem?.SelectedValue?.Value;
 
-        Callback?.Invoke(this, menuAction);
-        menuItem?.Callback?.Invoke(this, menuItem, menuAction);
         menuValue?.Callback?.Invoke(this, menuValue, menuAction);
+        menuItem?.Callback?.Invoke(this, menuItem, menuAction);
+        Callback?.Invoke(this, menuAction);
     }
 
     private bool IsSelected(int index) =>
