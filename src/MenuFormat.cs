@@ -1,16 +1,15 @@
 using System.Drawing;
+using RMenu.Enums;
 
 namespace RMenu;
 
 public class MenuFormat(
     Color? color = null,
-    bool bold = false,
-    bool italic = false,
+    MenuStyle style = MenuStyle.None,
     bool canHighlight = true
 )
 {
     public Color Color { get; set; } = color ?? Color.White;
-    public bool Bold { get; set; } = bold;
-    public bool Italic { get; set; } = italic;
+    public MenuStyle Style { get; set; } = style;
     public bool CanHighlight { get; set; } = canHighlight;
 }

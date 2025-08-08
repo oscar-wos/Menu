@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Text;
+using RMenu.Extensions;
 using RMenu.Helpers;
 
 namespace RMenu;
@@ -42,7 +43,7 @@ public class MenuObject(string text, MenuFormat? format = null)
         }
 
         _ = stringBuilder.Append(
-            $"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\"><font class=\"{(format.Italic ? "stratum-bold-italic" : format.Bold ? "stratum-bold" : "stratum")}\">{Display}</font></font>"
+            $"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\"><font class=\"{format.Style.Value()}\">{Display}</font></font>"
         );
     }
 }

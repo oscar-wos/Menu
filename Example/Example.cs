@@ -46,7 +46,7 @@ public class Example : BasePlugin
         {
             BlockMovement = true,
             DisplayItemsInHeader = true,
-            Highlight = new MenuFormat { Color = Color.Green, Bold = true },
+            Highlight = new MenuFormat { Color = Color.Green, Style = MenuStyle.Bold },
         };
 
         MenuBase menu = new(header: header, footer: footer, options: options);
@@ -103,7 +103,10 @@ public class Example : BasePlugin
                 new MenuFormat(isLinear ? Color.DarkOrange : Color.Yellow, canHighlight: false)
             ),
             new MenuObject($"T{tier} ", new MenuFormat(TierToColor(tier), canHighlight: false)),
-            new MenuObject($"{rating:0.0}/5", new MenuFormat(italic: true, canHighlight: false)),
+            new MenuObject(
+                $"{rating:0.0}/5",
+                new MenuFormat(style: MenuStyle.Italic, canHighlight: false)
+            ),
         ];
 
         /*
