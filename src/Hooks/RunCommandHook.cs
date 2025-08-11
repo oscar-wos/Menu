@@ -17,14 +17,14 @@ internal static class RunCommandHook
 
     private static readonly MenuButton[] _menuButtons = Enum.GetValues<MenuButton>();
 
-    public static void Register() => _runCommand.Hook(RunCommandPre, HookMode.Pre);
+    public static void Register() => _runCommand.Hook(RunCommand, HookMode.Pre);
 
-    private static unsafe HookResult RunCommandPre(DynamicHook h)
+    private static unsafe HookResult RunCommand(DynamicHook h)
     {
         if (
             h.GetParam<CPlayer_MovementServices>(0)
                 .Pawn.Value.Controller.Value?.As<CCSPlayerController>()
-            is not CCSPlayerController { IsValid: true } player
+            is not { IsValid: true } player
         )
         {
             return HookResult.Continue;
@@ -56,7 +56,6 @@ internal static class RunCommandHook
             if (buttonMask != 0 && (buttons & buttonMask) != 0)
             {
                 menu.Input(button);
-                break;
             }
         }
 

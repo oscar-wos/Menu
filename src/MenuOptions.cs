@@ -83,7 +83,7 @@ public class MenuOptions
         FooterSizeHtml = $"<font class=\"fontSize-{_footerFontSize.ToString().ToLower()}\">";
 
         int availableHeight = Menu.MENU_HEIGHT - ((int)HeaderFontSize + (int)FooterFontSize);
-        AvailableChars = (int)(Menu.MENU_LENGTH / ((int)ItemFontSize * 0.6));
+        AvailableChars = (int)(Menu.MENU_LENGTH / ((int)ItemFontSize * 0.58));
         AvailableItems = Math.Max(1, availableHeight / (int)ItemFontSize);
     }
 }

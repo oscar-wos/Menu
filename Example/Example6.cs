@@ -18,9 +18,9 @@ public partial class Example
         float rating
     )> _example6Data =
     [
-        ("surf_longhop2", "map_001", true, 5, 1, 4.2f),
+        ("surf_longhop2_r_ljt_abc", "map_001", true, 5, 1, 4.2f),
         ("surf_skrillcake_r", "map_002", false, 8, 2, 3.8f),
-        ("surf_comp_hopblocks", "map_003", true, 3, 1, 4.5f),
+        ("surf_comp_hopblocks_r_ljt_abc", "map_003", true, 3, 1, 4.5f),
         ("surf_synergy_x", "map_004", false, 12, 4, 4.7f),
         ("surf_aztectemple", "map_005", true, 7, 3, 3.9f),
         ("surf_minimountain", "map_006", false, 6, 2, 4.1f),
@@ -71,14 +71,17 @@ public partial class Example
             ) in _example6Data
         )
         {
-            MenuValue value = AppendMap(mapName, isLinear, segments, tier, rating);
+            MenuValue value = new($"{mapName} ");
+            MenuValue tail = AppendTail(isLinear, segments, tier, rating);
+
+            value.Objects.AddRange(tail.Objects);
             value.Data = mapId;
 
             values.Add(value);
         }
 
-        menu.Items.Add(new(MenuItemType.Choice, values: values));
-        menu.Items.Add(new(MenuItemType.Spacer));
+        menu.Items.Add(new MenuItem(MenuItemType.Choice, values: values));
+        menu.Items.Add(new MenuItem(MenuItemType.Spacer));
 
         foreach (
             (
@@ -91,8 +94,15 @@ public partial class Example
             ) in _example6Data
         )
         {
-            MenuValue item = AppendMap(mapName, isLinear, segments, tier, rating);
-            menu.Items.Add(new(MenuItemType.Button, item, data: mapId));
+            menu.Items.Add(
+                new MenuItem(
+                    type: MenuItemType.Button,
+                    head: new(mapName),
+                    tail: AppendTail(isLinear, segments, tier, rating),
+                    data: mapId,
+                    options: new MenuItemOptions() { Trim = MenuTrim.Head }
+                )
+            );
         }
 
         Menu.Display(player, menu, Example6MenuCallback);
@@ -144,17 +154,11 @@ public partial class Example
         }
     }
 
-    private static MenuValue AppendMap(
-        string mapName,
-        bool isLinear,
-        int segments,
-        int tier,
-        float rating
-    )
+    private static MenuValue AppendTail(bool isLinear, int segments, int tier, float rating)
     {
         List<MenuObject> value =
         [
-            $"{mapName} ",
+            " ",
             new MenuObject(
                 $"{(isLinear ? "L" : $"S{segments}")} ",
                 new MenuFormat(isLinear ? Color.DarkOrange : Color.Yellow, canHighlight: false)

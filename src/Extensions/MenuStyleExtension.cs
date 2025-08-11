@@ -2,7 +2,7 @@ using RMenu.Enums;
 
 namespace RMenu.Extensions;
 
-public static class MenuStyleExtensions
+public static class MenuStyleExtension
 {
     public static string Value(this MenuStyle style) =>
         style switch

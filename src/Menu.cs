@@ -10,7 +10,7 @@ namespace RMenu;
 public static partial class Menu
 {
     internal const int MENU_HEIGHT = 140;
-    internal const int MENU_LENGTH = 300;
+    internal const int MENU_LENGTH = 290;
 
     private static readonly StringBuilder _menuBuilder = new(8192);
 
@@ -158,6 +158,18 @@ public static partial class Menu
 
         bool isSingleButton =
             menuItem.Type is MenuItemType.Button && (menuItem.Values is not { Count: > 0 });
+
+        int headLength = menuItem.Head?.Length() ?? 0;
+        int tailLength = menuItem.Tail?.Length() ?? 0;
+
+        if (menuItem.Options.Trim == MenuTrim.Head && menuItem.Head != null)
+        {
+            TrimValue(menuItem.Head, menu.Options.AvailableChars - tailLength);
+        }
+        else if (menuItem.Options.Trim == MenuTrim.Tail && menuItem.Tail != null)
+        {
+            TrimValue(menuItem.Tail, menu.Options.AvailableChars - headLength);
+        }
 
         if (isSelected)
         {

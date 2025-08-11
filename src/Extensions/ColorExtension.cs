@@ -2,7 +2,7 @@ using System.Drawing;
 
 namespace RMenu.Extensions;
 
-public static class ColorExtensions
+public static class ColorExtension
 {
     public static Color Rainbow(this Color _) => Color.FromArgb(0, 0, 0, 0);
 

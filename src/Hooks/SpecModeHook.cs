@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using RMenu.Enums;
@@ -27,6 +28,11 @@ internal static class SpecModeHook
         }
 
         if (Menu.Get(player) is not { Options.ProcessInput: true } menu)
+        {
+            return HookResult.Continue;
+        }
+
+        if ((menu.Options.Buttons[MenuButton.Select] & PlayerButtons.Jump) == 0)
         {
             return HookResult.Continue;
         }

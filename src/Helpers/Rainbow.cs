@@ -31,7 +31,7 @@ internal static class Rainbow
 
     public static void Strobe(
         StringBuilder stringBuilder,
-        string input,
+        string text,
         MenuFormat format,
         bool isReversed = false
     )
@@ -40,7 +40,7 @@ internal static class Rainbow
         byte endHue = format.Color.G;
         byte hueDelta = format.Color.B;
 
-        int step = input.Length > 1 ? hueDelta / (input.Length - 1) : hueDelta;
+        int step = text.Length > 1 ? hueDelta / (text.Length - 1) : hueDelta;
 
         if (isReversed)
         {
@@ -49,7 +49,7 @@ internal static class Rainbow
 
         _ = stringBuilder.Append($"<font class=\"{format.Style.Value()}\">");
 
-        for (int i = 0; i < input.Length; i++)
+        for (int i = 0; i < text.Length; i++)
         {
             int offset = i * step;
             double strobeHue = (_currentHue + offset + HUE_MAX) % HUE_MAX;
@@ -86,7 +86,7 @@ internal static class Rainbow
             Color color = GetColorFromHue(strobeHue);
 
             _ = stringBuilder.Append(
-                $"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\">{input[i]}</font>"
+                $"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\">{text[i]}</font>"
             );
         }
 

@@ -39,6 +39,24 @@ public partial class Example
             new MenuItem(type: MenuItemType.Button, head: new("Select: "), values: values)
         );
 
+        menu.Items.Add(
+            new MenuItem(
+                type: MenuItemType.Button,
+                head: new("verylonghead verylonghead", new MenuFormat(color: Color.Blue)),
+                tail: new(" short tail", new MenuFormat(color: Color.Red)),
+                options: new MenuItemOptions() { Trim = MenuTrim.Head }
+            )
+        );
+
+        menu.Items.Add(
+            new MenuItem(
+                type: MenuItemType.Button,
+                head: new("short head", new MenuFormat(color: Color.Blue)),
+                tail: new(" verylongtail verylongtail", new MenuFormat(color: Color.Red)),
+                options: new MenuItemOptions() { Trim = MenuTrim.Tail }
+            )
+        );
+
         Menu.Display(player, menu, Example5MenuCallback);
     }
 
