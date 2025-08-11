@@ -53,9 +53,10 @@ internal static class RunCommandHook
             MenuButton button = _menuButtons[i];
             PlayerButtons buttonMask = menu.Options.Buttons[button];
 
-            if ((buttons & buttonMask) == buttonMask)
+            if (buttonMask != 0 && (buttons & buttonMask) != 0)
             {
                 menu.Input(button);
+                break;
             }
         }
 

@@ -33,9 +33,10 @@ public partial class Example
         ];
 
         MenuOptions options = new() { BlockMovement = true, DisplayItemsInHeader = true };
-        options.Buttons[MenuButton.Select] = PlayerButtons.Use;
+        options.Buttons[MenuButton.Select] = PlayerButtons.Use | PlayerButtons.Jump;
 
         MenuBase menu = new(header: header, footer: footer, options: options);
+        menu.Items.Add(new(MenuItemType.Button, new("button")));
 
         Menu.Display(player, menu, Example3MenuCallback);
     }
