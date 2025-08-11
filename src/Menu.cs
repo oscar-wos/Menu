@@ -277,9 +277,9 @@ public static partial class Menu
                     menuItem.Values[currentIndex - i].Render(stringBuilder);
                     _ = stringBuilder.Append(' ');
                 }
-
-                FormatSelected(stringBuilder, menu, menuItem, currentIndex);
             }
+
+            FormatSelected(stringBuilder, menu, menuItem, currentIndex);
         }
     }
 

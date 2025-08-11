@@ -40,11 +40,11 @@ public class MenuItem
     {
         Type = type;
         Head = head;
+        Values = values;
         Tail = tail;
         Options = options ?? new MenuItemOptions();
         Data = data;
         Callback = callback;
-        Values = values;
     }
 
     public bool Input(MenuButton button)

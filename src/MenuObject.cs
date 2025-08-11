@@ -17,7 +17,7 @@ public class MenuObject(string text, MenuFormat? format = null)
     {
         MenuFormat format = Format;
 
-        if (highlight is not null && Format.CanHighlight)
+        if (highlight is not null && format.CanHighlight)
         {
             format = highlight;
         }
@@ -31,11 +31,11 @@ public class MenuObject(string text, MenuFormat? format = null)
                 break;
 
             case 1:
-                Rainbow.Strobe(stringBuilder, Display, color.R, color.G, color.B, false);
+                Rainbow.Strobe(stringBuilder, Display, format, false);
                 return;
 
             case 2:
-                Rainbow.Strobe(stringBuilder, Display, color.R, color.G, color.B, true);
+                Rainbow.Strobe(stringBuilder, Display, format, true);
                 return;
 
             default:
@@ -43,7 +43,7 @@ public class MenuObject(string text, MenuFormat? format = null)
         }
 
         _ = stringBuilder.Append(
-            $"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\"><font class=\"{format.Style.Value()}\">{Display}</font></font>"
+            $"<font class=\"{format.Style.Value()}\"><font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\">{Display}</font></font>"
         );
     }
 }

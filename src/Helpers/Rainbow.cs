@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Text;
+using RMenu.Extensions;
 
 namespace RMenu.Helpers;
 
@@ -31,18 +32,22 @@ internal static class Rainbow
     public static void Strobe(
         StringBuilder stringBuilder,
         string input,
-        byte startHue,
-        byte endHue,
-        byte hueDelta,
+        MenuFormat format,
         bool isReversed = false
     )
     {
+        byte startHue = format.Color.R;
+        byte endHue = format.Color.G;
+        byte hueDelta = format.Color.B;
+
         int step = input.Length > 1 ? hueDelta / (input.Length - 1) : hueDelta;
 
         if (isReversed)
         {
             step = -step;
         }
+
+        _ = stringBuilder.Append($"<font class=\"{format.Style.Value()}\">");
 
         for (int i = 0; i < input.Length; i++)
         {
@@ -84,6 +89,8 @@ internal static class Rainbow
                 $"<font color=\"#{color.R:X2}{color.G:X2}{color.B:X2}\">{input[i]}</font>"
             );
         }
+
+        _ = stringBuilder.Append($"</font>");
     }
 
     private static Color ComputeColor(double hue)
