@@ -71,10 +71,10 @@ public partial class Example
             ) in _example6Data
         )
         {
-            MenuValue value = new($"{mapName} ");
-            MenuValue tail = AppendTail(isLinear, segments, tier, rating);
+            MenuValue value = new(mapName);
+            List<MenuObject> objects = AppendTail(isLinear, segments, tier, rating);
 
-            value.Objects.AddRange(tail.Objects);
+            value.Objects.AddRange(objects);
             value.Data = mapId;
 
             values.Add(value);
@@ -154,9 +154,9 @@ public partial class Example
         }
     }
 
-    private static MenuValue AppendTail(bool isLinear, int segments, int tier, float rating)
+    private static List<MenuObject> AppendTail(bool isLinear, int segments, int tier, float rating)
     {
-        List<MenuObject> value =
+        List<MenuObject> objects =
         [
             " ",
             new MenuObject(
@@ -170,7 +170,7 @@ public partial class Example
             ),
         ];
 
-        return value;
+        return objects;
     }
 
     private static Color TierToColor(int tier) =>
