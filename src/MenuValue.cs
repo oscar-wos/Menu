@@ -42,15 +42,23 @@ public class MenuValue
         }
     }
 
-    internal int Length()
+    internal int Length(MenuFormat? highlight = null)
     {
-        int length = 0;
+        double length = 0;
 
         for (int i = 0; i < Objects.Count; i++)
         {
-            length += Objects[i].Text.Length;
+            double baseLength = Objects[i].Text.Length;
+            MenuFormat format = highlight ?? Objects[i].Format;
+
+            if (format.Style is not MenuStyle.None)
+            {
+                baseLength *= 1.5;
+            }
+
+            length += baseLength;
         }
 
-        return length;
+        return (int)length;
     }
 }

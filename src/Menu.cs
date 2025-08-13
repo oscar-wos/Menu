@@ -159,14 +159,14 @@ public static partial class Menu
         bool isSingleButton =
             menuItem.Type is MenuItemType.Button && (menuItem.Values is not { Count: > 0 });
 
-        int headLength = menuItem.Head?.Length() ?? 0;
-        int tailLength = menuItem.Tail?.Length() ?? 0;
+        int headLength = menuItem.Head?.Length(isSelected ? menu.Options.Highlight : null) ?? 0;
+        int tailLength = menuItem.Tail?.Length(isSelected ? menu.Options.Highlight : null) ?? 0;
 
-        if (menuItem.Options.Trim == MenuTrim.Head && menuItem.Head != null)
+        if (menuItem.Options.Trim == MenuTrim.Head && menuItem.Head is not null)
         {
             TrimValue(menuItem.Head, menu.Options.AvailableChars - tailLength);
         }
-        else if (menuItem.Options.Trim == MenuTrim.Tail && menuItem.Tail != null)
+        else if (menuItem.Options.Trim == MenuTrim.Tail && menuItem.Tail is not null)
         {
             TrimValue(menuItem.Tail, menu.Options.AvailableChars - headLength);
         }
