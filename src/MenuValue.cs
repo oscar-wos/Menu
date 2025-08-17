@@ -51,9 +51,9 @@ public class MenuValue
             double baseLength = Objects[i].Text.Length;
             MenuFormat format = highlight ?? Objects[i].Format;
 
-            if (format.Style is not MenuStyle.None)
+            if (format.Style == MenuStyle.Mono)
             {
-                baseLength *= 1.5;
+                baseLength *= 1.2;
             }
 
             length += baseLength;

@@ -232,7 +232,7 @@ public static partial class Menu
         int prevIndex = (currentIndex == 0) ? menuItem.Values.Count - 1 : currentIndex - 1;
         int nextIndex = (currentIndex == menuItem.Values.Count - 1) ? 0 : currentIndex + 1;
 
-        int selectedLength = menuItem.Values[currentIndex].Length();
+        int selectedLength = menuItem.Values[currentIndex].Length(menu.Options.Highlight);
         int remainingChars = menu.Options.AvailableChars - selectedLength;
 
         if (menuItem.Head is not null)

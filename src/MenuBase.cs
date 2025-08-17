@@ -6,11 +6,11 @@ namespace RMenu;
 public class MenuBase(
     MenuValue? header = null,
     MenuValue? footer = null,
-    MenuOptions? options = null,
-    Action<MenuBase, MenuAction>? callback = null
+    MenuOptions? options = null
 )
 {
     private readonly long[] _lastInput = new long[Enum.GetValues(typeof(MenuButton)).Length];
+    internal Action<MenuBase, MenuAction>? Callback { get; set; }
 
     public CCSPlayerController Player { get; set; } = null!;
     public List<MenuItem> Items { get; set; } = [];
@@ -19,7 +19,6 @@ public class MenuBase(
     public MenuValue? Header { get; set; } = header;
     public MenuValue? Footer { get; set; } = footer;
     public MenuOptions Options { get; init; } = options ?? new MenuOptions();
-    public Action<MenuBase, MenuAction>? Callback { get; set; } = callback;
 
     internal void Input(MenuButton button)
     {

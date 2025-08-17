@@ -10,12 +10,12 @@ public class MenuOptions
     private MenuFontSize _itemFontSize = MenuFontSize.SM;
     private MenuFontSize _footerFontSize = MenuFontSize.S;
 
-    public string HeaderSizeHtml { get; private set; } = string.Empty;
-    public string ItemSizeHtml { get; private set; } = string.Empty;
-    public string FooterSizeHtml { get; private set; } = string.Empty;
+    internal string HeaderSizeHtml { get; private set; } = string.Empty;
+    internal string ItemSizeHtml { get; private set; } = string.Empty;
+    internal string FooterSizeHtml { get; private set; } = string.Empty;
 
-    public int AvailableChars { get; private set; } = 1;
-    public int AvailableItems { get; private set; } = 1;
+    internal int AvailableChars { get; private set; } = 1;
+    internal int AvailableItems { get; private set; } = 1;
 
     public MenuInput<MenuButton> Buttons { get; set; } = new();
     public MenuContinuous<MenuButton> Continuous { get; set; } = new();
@@ -83,7 +83,17 @@ public class MenuOptions
         FooterSizeHtml = $"<font class=\"fontSize-{_footerFontSize.ToString().ToLower()}\">";
 
         int availableHeight = Menu.MENU_HEIGHT - ((int)HeaderFontSize + (int)FooterFontSize);
-        AvailableChars = (int)(Menu.MENU_LENGTH / ((int)ItemFontSize * 0.58));
+
+        AvailableChars = (int)(
+            (Menu.MENU_LENGTH / ((int)ItemFontSize * 0.6))
+            - (
+                Cursor[0].Display.Length
+                + Cursor[1].Display.Length
+                + Selector[0].Display.Length
+                + Selector[1].Display.Length
+            )
+        );
+
         AvailableItems = Math.Max(1, availableHeight / (int)ItemFontSize);
     }
 }
