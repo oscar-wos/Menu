@@ -59,7 +59,7 @@ public class MenuBase(
         {
             if (IsSelected(newIndex))
             {
-                Invoke(MenuAction.Update);
+                Invoke(MenuAction.Choose);
                 return;
             }
         }
@@ -76,7 +76,7 @@ public class MenuBase(
         {
             if (IsSelected(newIndex))
             {
-                Invoke(MenuAction.Update);
+                Invoke(MenuAction.Choose);
                 return;
             }
         }
