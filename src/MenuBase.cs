@@ -28,6 +28,7 @@ public class MenuBase(
             MenuButton.Left => HandleLeft,
             MenuButton.Right => HandleRight,
             MenuButton.Select => HandleSelect,
+            MenuButton.Back => HandleBack,
             MenuButton.Exit => HandleExit,
             MenuButton.Assist => HandleAssist,
             _ => null,
@@ -97,6 +98,17 @@ public class MenuBase(
     }
 
     private void HandleSelect() => Invoke(MenuAction.Select);
+
+    private void HandleBack()
+    {
+        if (!Options.Exitable)
+        {
+            return;
+        }
+
+        Invoke(MenuAction.Exit);
+        Menu.Close(Player);
+    }
 
     private void HandleExit()
     {
