@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using CounterStrikeSharp.API.Core;
 
 namespace RMenu.Listeners;
@@ -9,19 +10,28 @@ internal static class OnTickListener
 
     private static void OnTick()
     {
-        foreach ((int playerSlot, (MenuBase menu, string html)) in Menu.CurrentMenus)
+        for (int i = 0; i < Menu.MAX_PLAYERS; i++)
         {
-            if (
-                !Menu.Players.TryGetValue(playerSlot, out CCSPlayerController? player)
-                || !player.IsValid
-                || player.Connected != PlayerConnectedState.PlayerConnected
-            )
+            if (Menu.GetData(i) is not { } menuData)
             {
-                Menu.Remove(playerSlot);
                 continue;
             }
 
-            string result = Menu.RaiseOnPrintMenu(menu, html);
+            if (
+                menuData.Player
+                is not { IsValid: true, Connected: PlayerConnectedState.PlayerConnected } player
+            )
+            {
+                Menu.Remove(i);
+                continue;
+            }
+
+            if (menuData.Current is not { } current)
+            {
+                continue;
+            }
+
+            string result = Menu.RaiseOnPrintMenu(current.Menu, current.Html);
             player.PrintToCenterHtml(result, 1);
         }
     }

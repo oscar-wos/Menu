@@ -16,10 +16,10 @@ internal static class SpecModeHook
 
     public static void Register() => _specMode.Hook(SpecMode, HookMode.Pre);
 
-    private static HookResult SpecMode(DynamicHook h)
+    private static HookResult SpecMode(DynamicHook hook)
     {
         if (
-            h.GetParam<CPlayer_ObserverServices>(0)
+            hook.GetParam<CPlayer_ObserverServices>(0)
                 .Pawn.Value.Controller.Value?.As<CCSPlayerController>()
             is not { IsValid: true } player
         )
@@ -27,7 +27,7 @@ internal static class SpecModeHook
             return HookResult.Continue;
         }
 
-        if (Menu.Get(player) is not { Options.ProcessInput: true } menu)
+        if (Menu.Get(player, true) is not { Options.ProcessInput: true } menu)
         {
             return HookResult.Continue;
         }
@@ -37,7 +37,7 @@ internal static class SpecModeHook
             return HookResult.Continue;
         }
 
-        menu.Input(MenuButton.Select);
+        Menu.Input(menu, PlayerButtons.Jump);
         return HookResult.Continue;
     }
 }

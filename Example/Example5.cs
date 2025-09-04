@@ -57,7 +57,7 @@ public partial class Example
             )
         );
 
-        Menu.Display(player, menu, Example5MenuCallback);
+        Menu.Display(player, menu, callback: Example5MenuCallback);
     }
 
     private static MenuValue FormatValue(string head, string tail)

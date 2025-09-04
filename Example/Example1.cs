@@ -19,7 +19,7 @@ public partial class Example
         MenuValue footer = new("footer", new MenuFormat(color: Color.Green, style: MenuStyle.Bold));
         MenuBase menu = new(header: header, footer: footer);
 
-        Menu.Display(player, menu, Example1MenuCallback);
+        Menu.Display(player, menu, callback: Example1MenuCallback);
     }
 
     private void Example1MenuCallback(MenuBase menu, MenuAction menuAction)

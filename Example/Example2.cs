@@ -32,7 +32,7 @@ public partial class Example
         Menu.Display(
             player,
             menu,
-            (menu, menuAction) =>
+            callback: (menu, menuAction) =>
             {
                 switch (menuAction)
                 {

@@ -1,5 +1,4 @@
 using System.Text;
-using CounterStrikeSharp.API.Core;
 using RMenu.Enums;
 using RMenu.Helpers;
 using RMenu.Hooks;
@@ -9,19 +8,12 @@ namespace RMenu;
 
 public static partial class Menu
 {
+    public const int MAX_PLAYERS = 64;
     internal const int MENU_HEIGHT = 140;
     internal const int MENU_LENGTH = 290;
 
     private static readonly StringBuilder _menuBuilder = new(8192);
-
-    private static readonly Dictionary<int, CCSPlayerController> _players = [];
-    private static readonly Dictionary<int, List<MenuBase>> _menus = [];
-    private static readonly Dictionary<int, (MenuBase menu, string html)> _currentMenus = [];
-
-    public static readonly IReadOnlyDictionary<int, CCSPlayerController> Players = _players;
-
-    public static readonly IReadOnlyDictionary<int, (MenuBase menu, string html)> CurrentMenus =
-        _currentMenus;
+    private static readonly MenuData?[] _menuData = new MenuData[MAX_PLAYERS];
 
     public static event EventHandler<MenuEvent>? OnPrintMenu;
 
@@ -59,15 +51,23 @@ public static partial class Menu
 
     internal static void ProcessMenus()
     {
-        foreach ((int playerSlot, List<MenuBase> menus) in _menus)
+        for (int i = 0; i < MAX_PLAYERS; i++)
         {
-            if (menus.Count == 0)
+            MenuData? menuData = _menuData[i];
+
+            if (menuData is null)
             {
                 continue;
             }
 
-            MenuBase menu = menus[0];
-            _currentMenus[playerSlot] = (menu, RenderMenu(menu));
+            if (menuData.Menus.Count == 0 || menuData.Menus[0].Count == 0)
+            {
+                _menuData[i] = null;
+                continue;
+            }
+
+            MenuBase menu = menuData.Menus[0].Peek();
+            menuData.Current = (menu, RenderMenu(menu));
         }
     }
 
@@ -99,7 +99,7 @@ public static partial class Menu
         if (menu.Options.DisplayItemsInHeader && menu.SelectedItem is not null)
         {
             _ = stringBuilder.Append(
-                $"</font>{menu.Options.FooterSizeHtml} {menu.SelectedItem.Value.Index + 1}/{menu.Items.Count}"
+                $"</font>{menu.Options.FooterSizeHtml} {menu.SelectedItem.Index + 1}/{menu.Items.Count}"
             );
         }
 

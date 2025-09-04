@@ -105,7 +105,7 @@ public partial class Example
             );
         }
 
-        Menu.Display(player, menu, Example6MenuCallback);
+        Menu.Display(player, menu, callback: Example6MenuCallback);
     }
 
     private void Example6MenuCallback(MenuBase menu, MenuAction menuAction)

@@ -5,7 +5,7 @@ namespace RMenu;
 public class MenuItem
 {
     private List<MenuValue>? _values;
-    public (int Index, MenuValue Value)? SelectedValue { get; set; } = null;
+    public MenuSelectedValue? SelectedValue { get; set; } = null;
 
     public List<MenuValue>? Values
     {
@@ -16,7 +16,7 @@ public class MenuItem
 
             if (_values is { Count: > 0 })
             {
-                SelectedValue = (0, _values[0]);
+                SelectedValue = new(0, _values[0]);
             }
         }
     }
@@ -54,25 +54,25 @@ public class MenuItem
             return false;
         }
 
-        SelectedValue ??= (0, _values[0]);
+        SelectedValue ??= new(0, _values[0]);
 
         int newIndex = button switch
         {
             MenuButton.Left => Options.Pinwheel
-                ? (SelectedValue.Value.Index - 1 + _values.Count) % _values.Count
-                : Math.Max(0, SelectedValue.Value.Index - 1),
+                ? (SelectedValue.Index - 1 + _values.Count) % _values.Count
+                : Math.Max(0, SelectedValue.Index - 1),
             MenuButton.Right => Options.Pinwheel
-                ? (SelectedValue.Value.Index + 1) % _values.Count
-                : Math.Min(_values.Count - 1, SelectedValue.Value.Index + 1),
-            _ => SelectedValue.Value.Index,
+                ? (SelectedValue.Index + 1) % _values.Count
+                : Math.Min(_values.Count - 1, SelectedValue.Index + 1),
+            _ => SelectedValue.Index,
         };
 
-        if (newIndex == SelectedValue.Value.Index)
+        if (newIndex == SelectedValue.Index)
         {
             return false;
         }
 
-        SelectedValue = (newIndex, _values[newIndex]);
+        SelectedValue = new(newIndex, _values[newIndex]);
         return true;
     }
 }

@@ -15,14 +15,12 @@ internal static class RunCommandHook
             : "48 89 5C 24 20 55 56 57 41 54 41 55 41 56 41 57 48 83 EC 20"
     );
 
-    private static readonly MenuButton[] _menuButtons = Enum.GetValues<MenuButton>();
-
     public static void Register() => _runCommand.Hook(RunCommand, HookMode.Pre);
 
-    private static unsafe HookResult RunCommand(DynamicHook h)
+    private static unsafe HookResult RunCommand(DynamicHook hook)
     {
         if (
-            h.GetParam<CPlayer_MovementServices>(0)
+            hook.GetParam<CPlayer_MovementServices>(0)
                 .Pawn.Value.Controller.Value?.As<CCSPlayerController>()
             is not { IsValid: true } player
         )
@@ -30,12 +28,12 @@ internal static class RunCommandHook
             return HookResult.Continue;
         }
 
-        if (Menu.Get(player) is not { Options.ProcessInput: true } menu)
+        if (Menu.Get(player, true) is not { Options.ProcessInput: true } menu)
         {
             return HookResult.Continue;
         }
 
-        CUserCmd* userCmd = (CUserCmd*)h.GetParam<IntPtr>(1);
+        CUserCmd* userCmd = (CUserCmd*)hook.GetParam<IntPtr>(1);
 
         if (menu.Options.BlockMovement)
         {
@@ -48,17 +46,7 @@ internal static class RunCommandHook
             userCmd->m_InButtonState.m_nPressedButtons | userCmd->m_InButtonState.m_nScrollButtons
         );
 
-        for (int i = 0; i < _menuButtons.Length; i++)
-        {
-            MenuButton button = _menuButtons[i];
-            PlayerButtons buttonMask = menu.Options.Buttons[button];
-
-            if (buttonMask != 0 && (buttons & buttonMask) != 0)
-            {
-                menu.Input(button);
-            }
-        }
-
+        Menu.Input(menu, buttons);
         return HookResult.Continue;
     }
 }

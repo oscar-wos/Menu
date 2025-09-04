@@ -19,6 +19,7 @@ public class MenuInput<T>
                 MenuButton.Left => PlayerButtons.Moveleft,
                 MenuButton.Right => PlayerButtons.Moveright,
                 MenuButton.Select => PlayerButtons.Jump,
+                MenuButton.Back => PlayerButtons.Walk,
                 MenuButton.Exit => PlayerButtons.Scoreboard,
                 MenuButton.Assist => PlayerButtons.Inspect,
                 _ => 0,
