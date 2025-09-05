@@ -38,7 +38,7 @@ public partial class Example
         MenuBase menu = new(header: header, footer: footer, options: options);
         menu.Items.Add(new(MenuItemType.Button, new("button")));
 
-        Menu.Display(player, menu, Example3MenuCallback);
+        Menu.Display(player, menu, callback: Example3MenuCallback);
     }
 
     private void Example3MenuCallback(MenuBase menu, MenuAction menuAction)

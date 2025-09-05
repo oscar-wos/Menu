@@ -48,15 +48,15 @@ public class MenuValue
 
         for (int i = 0; i < Objects.Count; i++)
         {
-            double baseLength = Objects[i].Text.Length;
+            double objectLength = Objects[i].Text.Length;
             MenuFormat format = highlight ?? Objects[i].Format;
 
             if (format.Style == MenuStyle.Mono)
             {
-                baseLength *= 1.2;
+                objectLength *= 1.2;
             }
 
-            length += baseLength;
+            length += objectLength;
         }
 
         return (int)length;

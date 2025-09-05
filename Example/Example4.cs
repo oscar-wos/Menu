@@ -78,7 +78,7 @@ public partial class Example
             );
         }
 
-        Menu.Display(player, menu, Example4MenuCallback);
+        Menu.Display(player, menu, callback: Example4MenuCallback);
     }
 
     private void Example4ItemCallback(MenuBase menu, MenuItem menuItem, MenuAction menuAction)

@@ -9,12 +9,11 @@ public class MenuBase(
     MenuOptions? options = null
 )
 {
-    private readonly long[] _lastInput = new long[Enum.GetValues(typeof(MenuButton)).Length];
     internal Action<MenuBase, MenuAction>? Callback { get; set; }
 
     public CCSPlayerController Player { get; set; } = null!;
     public List<MenuItem> Items { get; set; } = [];
-    public (int Index, MenuItem Item)? SelectedItem { get; set; } = null;
+    public MenuSelectedItem? SelectedItem { get; set; } = null;
 
     public MenuValue? Header { get; set; } = header;
     public MenuValue? Footer { get; set; } = footer;
@@ -22,16 +21,6 @@ public class MenuBase(
 
     internal void Input(MenuButton button)
     {
-        if (_lastInput[(int)button] + Options.ButtonsDelay > Environment.TickCount64)
-        {
-            if (!Options.Continuous[button])
-            {
-                _lastInput[(int)button] = Environment.TickCount64;
-            }
-
-            return;
-        }
-
         Action? action = button switch
         {
             MenuButton.Up => HandleUp,
@@ -39,12 +28,12 @@ public class MenuBase(
             MenuButton.Left => HandleLeft,
             MenuButton.Right => HandleRight,
             MenuButton.Select => HandleSelect,
+            MenuButton.Back => HandleBack,
             MenuButton.Exit => HandleExit,
             MenuButton.Assist => HandleAssist,
             _ => null,
         };
 
-        _lastInput[(int)button] = Environment.TickCount64;
         action?.Invoke();
     }
 
@@ -110,6 +99,17 @@ public class MenuBase(
 
     private void HandleSelect() => Invoke(MenuAction.Select);
 
+    private void HandleBack()
+    {
+        if (!Options.Exitable)
+        {
+            return;
+        }
+
+        Invoke(MenuAction.Exit);
+        Menu.Close(Player);
+    }
+
     private void HandleExit()
     {
         if (!Options.Exitable)
@@ -134,7 +134,7 @@ public class MenuBase(
     }
 
     private bool IsSelected(int index) =>
-        IsSelectable(Items[index]) && (SelectedItem = (index, Items[index])) != null;
+        IsSelectable(Items[index]) && (SelectedItem = new(index, Items[index])) != null;
 
     internal static bool IsSelectable(MenuItem menuItem) =>
         menuItem.Type is MenuItemType.Choice or MenuItemType.Button;
