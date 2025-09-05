@@ -88,14 +88,7 @@ public static partial class Menu
             return;
         }
 
-        if (menuData.Menus.Count == 0 || menuData.Menus[0].Count == 0)
-        {
-            return;
-        }
-
-        MenuBase menuParent = menuData.Menus[0].Last();
-
-        if (!menuParent.Options.Exitable && !force)
+        if (menuData.Menus.Count == 0 || menuData.Menus[0].Count < 2)
         {
             return;
         }
@@ -147,7 +140,7 @@ public static partial class Menu
                     > Environment.TickCount64
                 )
                 {
-                    if (menuParent.Options.Continuous[button])
+                    if (!menuParent.Options.Continuous[button])
                     {
                         menuData._lastInput[i] = Environment.TickCount64;
                     }

@@ -28,7 +28,12 @@ internal static class RunCommandHook
             return HookResult.Continue;
         }
 
-        if (Menu.Get(player, true) is not { Options.ProcessInput: true } menu)
+        if (Menu.Get(player, true) is not { Options.ProcessInput: true })
+        {
+            return HookResult.Continue;
+        }
+
+        if (Menu.Get(player) is not { } menu)
         {
             return HookResult.Continue;
         }

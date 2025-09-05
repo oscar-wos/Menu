@@ -96,11 +96,24 @@ public static partial class Menu
         _ = stringBuilder.Append(menu.Options.HeaderSizeHtml);
         header.Render(stringBuilder);
 
-        if (menu.Options.DisplayItemsInHeader && menu.SelectedItem is not null)
+        if (menu.Options.DisplayItemsInHeader)
         {
-            _ = stringBuilder.Append(
-                $"</font>{menu.Options.FooterSizeHtml} {menu.SelectedItem.Index + 1}/{menu.Items.Count}"
-            );
+            bool isSubMenu = _menuData[menu.Player.Slot]?.Menus[0].Count > 1;
+
+            if (isSubMenu || menu.SelectedItem is not null)
+            {
+                _ = stringBuilder.Append($"</font>{menu.Options.FooterSizeHtml}");
+            }
+
+            if (isSubMenu)
+            {
+                _ = stringBuilder.Append(" ⇦");
+            }
+
+            if (menu.SelectedItem is not null)
+            {
+                _ = stringBuilder.Append($" {menu.SelectedItem.Index + 1}/{menu.Items.Count}");
+            }
         }
 
         _ = stringBuilder.Append("<br>");
