@@ -1,7 +1,7 @@
-namespace RMenu;
+namespace RMenu.Models;
 
 public class MenuEvent(MenuBase menu, string html)
 {
     public MenuBase Menu { get; } = menu;
-    public string String { get; set; } = html;
+    public string Html { get; set; } = html;
 }

@@ -5,12 +5,6 @@ namespace RMenu;
 
 public class MenuValue
 {
-    public static implicit operator MenuValue(List<MenuObject> menuObjects) => new(menuObjects);
-
-    public List<MenuObject> Objects { get; set; } = [];
-    public object? Data { get; set; }
-    public Action<MenuBase, MenuValue, MenuAction>? Callback { get; }
-
     public MenuValue(
         string text,
         MenuFormat? format = null,
@@ -33,6 +27,12 @@ public class MenuValue
         Data = data;
         Callback = callback;
     }
+
+    public List<MenuObject> Objects { get; set; } = [];
+    public object? Data { get; set; }
+    public Action<MenuBase, MenuValue, MenuAction>? Callback { get; }
+
+    public static implicit operator MenuValue(List<MenuObject> menuObjects) => new(menuObjects);
 
     internal void Render(StringBuilder stringBuilder, MenuFormat? highlight = null)
     {

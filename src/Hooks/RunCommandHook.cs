@@ -2,7 +2,6 @@ using System.Runtime.InteropServices;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
-using RMenu.Enums;
 using RMenu.Structs;
 
 namespace RMenu.Hooks;
@@ -28,11 +27,6 @@ internal static class RunCommandHook
             return HookResult.Continue;
         }
 
-        if (Menu.Get(player, true) is not { Options.ProcessInput: true })
-        {
-            return HookResult.Continue;
-        }
-
         if (Menu.Get(player) is not { } menu)
         {
             return HookResult.Continue;
@@ -51,7 +45,7 @@ internal static class RunCommandHook
             userCmd->m_InButtonState.m_nPressedButtons | userCmd->m_InButtonState.m_nScrollButtons
         );
 
-        Menu.Input(menu, buttons);
+        Menu.Input(player, menu, buttons);
         return HookResult.Continue;
     }
 }

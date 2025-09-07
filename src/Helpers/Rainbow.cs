@@ -13,7 +13,6 @@ internal static class Rainbow
     private static readonly Color[] _hue = new Color[HUE_MAX];
 
     private static double _currentHue;
-    public static Color CurrentColor { get; private set; }
 
     static Rainbow()
     {
@@ -22,6 +21,8 @@ internal static class Rainbow
             _hue[i] = ComputeColor(i);
         }
     }
+
+    public static Color CurrentColor { get; private set; }
 
     public static void UpdateHue()
     {

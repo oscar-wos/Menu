@@ -19,6 +19,7 @@ public partial class Example
         BlockMovement = true,
         DisplayItemsInHeader = true,
         Highlight = new MenuFormat { Color = Color.Green, Style = MenuStyle.Bold },
+        ItemFontSize = MenuFontSize.S,
     };
 
     private void Example7Menu(CCSPlayerController? player, CommandInfo info)
@@ -52,7 +53,7 @@ public partial class Example
             return;
         }
 
-        MenuBase subMenu = new(header: _header, options: _options);
+        MenuBase subMenu = new(header: _header);
 
         subMenu.Items.Add(
             new MenuItem(
@@ -71,7 +72,12 @@ public partial class Example
             return;
         }
 
-        MenuBase subMenu = new(header: _header, options: _options);
+        MenuOptions options = new()
+        {
+            Highlight = new MenuFormat { Color = Color.Blue, Style = MenuStyle.Bold },
+        };
+
+        MenuBase subMenu = new(header: _header, options: options);
 
         subMenu.Items.Add(
             new MenuItem(

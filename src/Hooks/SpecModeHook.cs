@@ -27,11 +27,6 @@ internal static class SpecModeHook
             return HookResult.Continue;
         }
 
-        if (Menu.Get(player, true) is not { Options.ProcessInput: true })
-        {
-            return HookResult.Continue;
-        }
-
         if (Menu.Get(player) is not { } menu)
         {
             return HookResult.Continue;
@@ -42,7 +37,7 @@ internal static class SpecModeHook
             return HookResult.Continue;
         }
 
-        Menu.Input(menu, PlayerButtons.Jump);
+        Menu.Input(player, menu, PlayerButtons.Jump);
         return HookResult.Continue;
     }
 }

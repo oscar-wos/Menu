@@ -12,7 +12,7 @@ internal static class OnTickListener
     {
         for (int i = 0; i < Menu.MAX_PLAYERS; i++)
         {
-            if (Menu.GetData(i) is not { } menuData)
+            if (Menu.GetData(i) is not { Current: { } current } menuData)
             {
                 continue;
             }
@@ -23,11 +23,6 @@ internal static class OnTickListener
             )
             {
                 Menu.Remove(i);
-                continue;
-            }
-
-            if (menuData.Current is not { } current)
-            {
                 continue;
             }
 

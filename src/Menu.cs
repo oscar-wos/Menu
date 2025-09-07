@@ -3,6 +3,7 @@ using RMenu.Enums;
 using RMenu.Helpers;
 using RMenu.Hooks;
 using RMenu.Listeners;
+using RMenu.Models;
 
 namespace RMenu;
 
@@ -36,7 +37,7 @@ public static partial class Menu
     {
         MenuEvent menuEvent = new(menu, html);
         OnPrintMenu?.Invoke(null, menuEvent);
-        return menuEvent.String;
+        return menuEvent.Html;
     }
 
     private static void MenuThread()
@@ -49,13 +50,11 @@ public static partial class Menu
         }
     }
 
-    internal static void ProcessMenus()
+    private static void ProcessMenus()
     {
         for (int i = 0; i < MAX_PLAYERS; i++)
         {
-            MenuData? menuData = _menuData[i];
-
-            if (menuData is null)
+            if (_menuData[i] is not { } menuData)
             {
                 continue;
             }
@@ -66,7 +65,7 @@ public static partial class Menu
                 continue;
             }
 
-            MenuBase menu = menuData.Menus[0].Peek();
+            MenuBase menu = menuData.Menus[0][^1];
             menuData.Current = (menu, RenderMenu(menu));
         }
     }
@@ -76,16 +75,16 @@ public static partial class Menu
         _ = _menuBuilder.Clear();
         _ = _menuBuilder.Append(' ');
 
-        if (menu.Header is not null)
+        if (menu.Header is { } header)
         {
-            RenderHeader(_menuBuilder, menu, menu.Header);
+            RenderHeader(_menuBuilder, menu, header);
         }
 
         RenderBody(_menuBuilder, menu);
 
-        if (menu.Footer is not null)
+        if (menu.Footer is { } footer)
         {
-            RenderFooter(_menuBuilder, menu, menu.Footer);
+            RenderFooter(_menuBuilder, menu, footer);
         }
 
         return _menuBuilder.ToString();
@@ -248,24 +247,31 @@ public static partial class Menu
         int selectedLength = menuItem.Values[currentIndex].Length(menu.Options.Highlight);
         int remainingChars = menu.Options.AvailableChars - selectedLength;
 
-        if (menuItem.Head is not null)
+        if (menuItem.Head is { } head)
         {
-            remainingChars -= menuItem.Head.Length();
+            remainingChars -= head.Length();
         }
 
-        if (menuItem.Tail is not null)
+        if (menuItem.Tail is { } tail)
         {
-            remainingChars -= menuItem.Tail.Length();
+            remainingChars -= tail.Length();
         }
 
-        int splitChars = remainingChars / 2 < 1 ? 1 : remainingChars / 2;
+        int renderItems = 1;
+
+        if (menuItem.Options.Pinwheel || menuItem.Values.Count > 2)
+        {
+            renderItems = 2;
+        }
+
+        int splitChars = remainingChars / renderItems < 1 ? 1 : remainingChars / renderItems;
 
         TrimValue(menuItem.Values[prevIndex], splitChars);
         TrimValue(menuItem.Values[nextIndex], splitChars);
 
         TrimValue(
             menuItem.Values[currentIndex],
-            remainingChars + selectedLength - (splitChars * 2)
+            remainingChars + selectedLength - (splitChars * renderItems)
         );
 
         if (

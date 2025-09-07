@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using RMenu.Enums;
+using RMenu.Models;
 
 namespace RMenu;
 
@@ -9,15 +10,14 @@ public class MenuBase(
     MenuOptions? options = null
 )
 {
-    internal Action<MenuBase, MenuAction>? Callback { get; set; }
-
     public CCSPlayerController Player { get; set; } = null!;
     public List<MenuItem> Items { get; set; } = [];
     public MenuSelectedItem? SelectedItem { get; set; } = null;
-
     public MenuValue? Header { get; set; } = header;
     public MenuValue? Footer { get; set; } = footer;
-    public MenuOptions Options { get; init; } = options ?? new MenuOptions();
+    public MenuOptions Options { get; set; } = options ?? new MenuOptions();
+
+    internal Action<MenuBase, MenuAction>? Callback { get; set; }
 
     internal void Input(MenuButton button)
     {
@@ -97,17 +97,22 @@ public class MenuBase(
         }
     }
 
-    private void HandleSelect() => Invoke(MenuAction.Select);
-
-    private void HandleBack()
+    private void HandleSelect()
     {
-        if (!Options.Exitable)
+        if (SelectedItem?.Item is null)
         {
             return;
         }
 
-        Invoke(MenuAction.Exit);
-        Menu.Close(Player);
+        Invoke(MenuAction.Select);
+    }
+
+    private void HandleBack()
+    {
+        if (Menu.Close(Player))
+        {
+            Invoke(MenuAction.Exit);
+        }
     }
 
     private void HandleExit()
@@ -117,8 +122,8 @@ public class MenuBase(
             return;
         }
 
-        Invoke(MenuAction.Exit);
         Menu.Clear(Player);
+        Invoke(MenuAction.Exit);
     }
 
     private void HandleAssist() => Invoke(MenuAction.Assist);
@@ -134,8 +139,6 @@ public class MenuBase(
     }
 
     private bool IsSelected(int index) =>
-        IsSelectable(Items[index]) && (SelectedItem = new(index, Items[index])) != null;
-
-    internal static bool IsSelectable(MenuItem menuItem) =>
-        menuItem.Type is MenuItemType.Choice or MenuItemType.Button;
+        Menu.IsSelectable(Items[index])
+        && (SelectedItem = new MenuSelectedItem(index, Items[index])) != null;
 }

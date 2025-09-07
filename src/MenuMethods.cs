@@ -1,6 +1,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using RMenu.Enums;
+using RMenu.Models;
 
 namespace RMenu;
 
@@ -22,7 +23,7 @@ public static partial class Menu
         {
             MenuItem menuItem = menu.Items[i];
 
-            if (menu.SelectedItem is null && MenuBase.IsSelectable(menuItem))
+            if (menu.SelectedItem is null && IsSelectable(menuItem))
             {
                 menu.SelectedItem = new MenuSelectedItem(i, menuItem);
             }
@@ -38,35 +39,37 @@ public static partial class Menu
             _menuData[player.Slot] = menuData;
         }
 
-        if (subMenu && menuData.Menus.Count > 0)
+        if (subMenu && menuData.Menus.Count > 0 && menuData.Menus[0].Count > 0)
         {
-            menuData.Menus[0].Push(menu);
-            menuData.Update();
-            return;
+            MenuOptions options = new(menuData.Menus[0][^1].Options);
+            options.Merge(menu.Options);
+
+            menu.Options = options;
+            menuData.Menus[0].Add(menu);
         }
-
-        Stack<MenuBase> menuStack = new([menu]);
-
-        if (!subMenu && menuData.Menus.Count > 0 && menuData.Menus[0].Count > 0)
+        else
         {
-            MenuBase menuParent = menuData.Menus[0].Last();
+            List<MenuBase> menuStack = [menu];
 
-            if (
-                menu.Options.Priority >= menuParent.Options.Priority
-                || !menuParent.Options.Exitable
-            )
+            bool isInsert =
+                !subMenu
+                && Get(player) is { } parent
+                && (menu.Options.Priority >= parent.Options.Priority || !parent.Options.Exitable);
+
+            if (isInsert)
             {
                 menuData.Menus.Insert(0, menuStack);
-                menuData.Update();
-                return;
+            }
+            else
+            {
+                menuData.Menus.Add(menuStack);
             }
         }
 
-        menuData.Menus.Add(menuStack);
         menuData.Update();
     }
 
-    public static MenuBase? Get(CCSPlayerController player, bool parent = false)
+    public static MenuBase? Get(CCSPlayerController player)
     {
         if (GetData(player.Slot) is not { } menuData)
         {
@@ -78,23 +81,24 @@ public static partial class Menu
             return null;
         }
 
-        return parent ? menuData.Menus[0].Last() : menuData.Menus[0].Peek();
+        return menuData.Menus[0][^1];
     }
 
-    public static void Close(CCSPlayerController player, bool force = false)
+    public static bool Close(CCSPlayerController player)
     {
         if (GetData(player.Slot) is not { } menuData)
         {
-            return;
+            return false;
         }
 
         if (menuData.Menus.Count == 0 || menuData.Menus[0].Count < 2)
         {
-            return;
+            return false;
         }
 
-        _ = menuData.Menus[0].Pop();
+        menuData.Menus[0].RemoveAt(menuData.Menus[0].Count - 1);
         menuData.Update();
+        return true;
     }
 
     public static void Clear(CCSPlayerController player, bool force = false)
@@ -106,9 +110,9 @@ public static partial class Menu
 
         for (int i = menuData.Menus.Count; i > 0; i--)
         {
-            Stack<MenuBase> menuStack = menuData.Menus[i - 1];
+            List<MenuBase> menuStack = menuData.Menus[i - 1];
 
-            if (menuStack.Count != 0 && !menuStack.Last().Options.Exitable && !force)
+            if (menuStack.Count != 0 && !menuStack[^1].Options.Exitable && !force)
             {
                 continue;
             }
@@ -119,14 +123,17 @@ public static partial class Menu
         menuData.Update();
     }
 
-    internal static void Input(MenuBase menu, PlayerButtons buttons)
+    internal static void Input(CCSPlayerController player, MenuBase menu, PlayerButtons buttons)
     {
-        if (GetData(menu.Player.Slot) is not { } menuData)
+        if (GetData(player.Slot) is not { } menuData)
         {
             return;
         }
 
-        MenuBase menuParent = menuData.Menus[0].Last();
+        if (menuData.Menus.Count == 0 || menuData.Menus[0].Count == 0)
+        {
+            return;
+        }
 
         for (int i = 0; i < _menuButtons.Length; i++)
         {
@@ -135,12 +142,9 @@ public static partial class Menu
 
             if (buttonMask != 0 && (buttons & buttonMask) != 0)
             {
-                if (
-                    menuData._lastInput[i] + menuParent.Options.ButtonsDelay
-                    > Environment.TickCount64
-                )
+                if (menuData._lastInput[i] + menu.Options.ButtonsDelay > Environment.TickCount64)
                 {
-                    if (!menuParent.Options.Continuous[button])
+                    if (!menu.Options.Continuous[button])
                     {
                         menuData._lastInput[i] = Environment.TickCount64;
                     }
@@ -157,4 +161,7 @@ public static partial class Menu
     internal static void Remove(int playerSlot) => _menuData[playerSlot] = null;
 
     internal static MenuData? GetData(int playerSlot) => _menuData[playerSlot];
+
+    internal static bool IsSelectable(MenuItem menuItem) =>
+        menuItem.Type is MenuItemType.Choice or MenuItemType.Button;
 }
