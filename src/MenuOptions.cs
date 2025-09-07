@@ -12,12 +12,11 @@ public class MenuOptions
     private MenuFontSize _itemFontSize = MenuFontSize.SM;
     private MenuFontSize _footerFontSize = MenuFontSize.S;
 
+    private bool _processInput = true;
     private bool _blockMovement = false;
-    private int _buttonsDelay = 150;
     private bool _displayItemsInHeader = true;
     private bool _exitable = true;
     private int _priority = 0;
-    private bool _processInput = true;
 
     private MenuInput<MenuButton> _buttons = new();
     private MenuContinuous<MenuButton> _continuous = new();
@@ -44,12 +43,11 @@ public class MenuOptions
         _itemFontSize = source._itemFontSize;
         _footerFontSize = source._footerFontSize;
 
+        _processInput = source._processInput;
         _blockMovement = source._blockMovement;
-        _buttonsDelay = source._buttonsDelay;
         _displayItemsInHeader = source._displayItemsInHeader;
         _exitable = source._exitable;
         _priority = source._priority;
-        _processInput = source._processInput;
 
         _buttons = new MenuInput<MenuButton>();
         _continuous = new MenuContinuous<MenuButton>();
@@ -94,7 +92,7 @@ public class MenuOptions
             );
         }
 
-        if (source._highlight != null)
+        if (source._highlight is not null)
         {
             _highlight = new MenuFormat(
                 source._highlight.Color,
@@ -117,6 +115,7 @@ public class MenuOptions
             UpdateHtml();
         }
     }
+
     public MenuFontSize ItemFontSize
     {
         get => _itemFontSize;
@@ -127,6 +126,7 @@ public class MenuOptions
             UpdateHtml();
         }
     }
+
     public MenuFontSize FooterFontSize
     {
         get => _footerFontSize;
@@ -147,6 +147,7 @@ public class MenuOptions
             _ = _options.Add(nameof(Buttons));
         }
     }
+
     public MenuContinuous<MenuButton> Continuous
     {
         get => _continuous;
@@ -156,51 +157,7 @@ public class MenuOptions
             _ = _options.Add(nameof(Continuous));
         }
     }
-    public bool BlockMovement
-    {
-        get => _blockMovement;
-        set
-        {
-            _blockMovement = value;
-            _ = _options.Add(nameof(BlockMovement));
-        }
-    }
-    public int ButtonsDelay
-    {
-        get => _buttonsDelay;
-        set
-        {
-            _buttonsDelay = value;
-            _ = _options.Add(nameof(ButtonsDelay));
-        }
-    }
-    public bool DisplayItemsInHeader
-    {
-        get => _displayItemsInHeader;
-        set
-        {
-            _displayItemsInHeader = value;
-            _ = _options.Add(nameof(DisplayItemsInHeader));
-        }
-    }
-    public bool Exitable
-    {
-        get => _exitable;
-        set
-        {
-            _exitable = value;
-            _ = _options.Add(nameof(Exitable));
-        }
-    }
-    public int Priority
-    {
-        get => _priority;
-        set
-        {
-            _priority = value;
-            _ = _options.Add(nameof(Priority));
-        }
-    }
+
     public bool ProcessInput
     {
         get => _processInput;
@@ -210,6 +167,47 @@ public class MenuOptions
             _ = _options.Add(nameof(ProcessInput));
         }
     }
+
+    public bool BlockMovement
+    {
+        get => _blockMovement;
+        set
+        {
+            _blockMovement = value;
+            _ = _options.Add(nameof(BlockMovement));
+        }
+    }
+
+    public bool DisplayItemsInHeader
+    {
+        get => _displayItemsInHeader;
+        set
+        {
+            _displayItemsInHeader = value;
+            _ = _options.Add(nameof(DisplayItemsInHeader));
+        }
+    }
+
+    public bool Exitable
+    {
+        get => _exitable;
+        set
+        {
+            _exitable = value;
+            _ = _options.Add(nameof(Exitable));
+        }
+    }
+
+    public int Priority
+    {
+        get => _priority;
+        set
+        {
+            _priority = value;
+            _ = _options.Add(nameof(Priority));
+        }
+    }
+
     public MenuObject[] Cursor
     {
         get => _cursor;
@@ -228,6 +226,7 @@ public class MenuOptions
             _ = _options.Add(nameof(Selector));
         }
     }
+
     public MenuFormat? Highlight
     {
         get => _highlight;
@@ -249,11 +248,6 @@ public class MenuOptions
         if (overrides.IsSet(nameof(BlockMovement)))
         {
             BlockMovement = overrides.BlockMovement;
-        }
-
-        if (overrides.IsSet(nameof(ButtonsDelay)))
-        {
-            ButtonsDelay = overrides.ButtonsDelay;
         }
 
         if (overrides.IsSet(nameof(DisplayItemsInHeader)))

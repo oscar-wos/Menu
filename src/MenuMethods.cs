@@ -140,21 +140,31 @@ public static partial class Menu
             MenuButton button = _menuButtons[i];
             PlayerButtons buttonMask = menu.Options.Buttons[button];
 
-            if (buttonMask != 0 && (buttons & buttonMask) != 0)
+            if (buttonMask == 0)
             {
-                if (menuData._lastInput[i] + menu.Options.ButtonsDelay > Environment.TickCount64)
-                {
-                    if (!menu.Options.Continuous[button])
-                    {
-                        menuData._lastInput[i] = Environment.TickCount64;
-                    }
-
-                    continue;
-                }
-
-                menuData._lastInput[i] = Environment.TickCount64;
-                menu.Input(button);
+                continue;
             }
+
+            bool isPressed = (buttons & buttonMask) != 0;
+            int continuousDelay = menu.Options.Continuous[button];
+
+            if (!isPressed)
+            {
+                menuData._lastInput[i] = 0;
+                continue;
+            }
+
+            if (
+                continuousDelay == 0
+                    ? menuData._lastInput[i] != 0
+                    : menuData._lastInput[i] + continuousDelay > Environment.TickCount64
+            )
+            {
+                continue;
+            }
+
+            menuData._lastInput[i] = Environment.TickCount64;
+            menu.Input(button);
         }
     }
 

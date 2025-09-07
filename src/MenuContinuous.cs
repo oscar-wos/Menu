@@ -5,7 +5,7 @@ namespace RMenu;
 public class MenuContinuous<T>
     where T : struct, Enum
 {
-    private readonly bool[] _values = new bool[Enum.GetValues(typeof(T)).Length];
+    private readonly int[] _values = new int[Enum.GetValues(typeof(T)).Length];
 
     public MenuContinuous()
     {
@@ -13,20 +13,20 @@ public class MenuContinuous<T>
         {
             _values[Convert.ToUInt16(button)] = button switch
             {
-                MenuButton.Up => true,
-                MenuButton.Down => true,
-                MenuButton.Left => true,
-                MenuButton.Right => true,
-                MenuButton.Select => false,
-                MenuButton.Back => false,
-                MenuButton.Exit => false,
-                MenuButton.Assist => false,
-                _ => false,
+                MenuButton.Up => 150,
+                MenuButton.Down => 150,
+                MenuButton.Left => 150,
+                MenuButton.Right => 150,
+                MenuButton.Select => 0,
+                MenuButton.Back => 0,
+                MenuButton.Exit => 0,
+                MenuButton.Assist => 0,
+                _ => 0,
             };
         }
     }
 
-    public bool this[T button]
+    public int this[T button]
     {
         get => _values[Convert.ToUInt16(button)];
         set => _values[Convert.ToUInt16(button)] = value;
