@@ -146,7 +146,10 @@ public static partial class Menu
             }
 
             bool isPressed = (buttons & buttonMask) != 0;
-            int continuousDelay = menu.Options.Continuous[button];
+
+            int continuousDelay =
+                menu.SelectedItem?.Item.Options.Continuous?[button]
+                ?? menu.Options.Continuous[button];
 
             if (!isPressed)
             {

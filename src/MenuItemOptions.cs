@@ -6,4 +6,5 @@ public class MenuItemOptions
 {
     public bool Pinwheel { get; set; } = true;
     public MenuTrim Trim { get; set; } = MenuTrim.None;
+    public MenuContinuous<MenuButton>? Continuous { get; set; } = null;
 }
