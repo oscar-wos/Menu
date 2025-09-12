@@ -24,7 +24,7 @@ public partial class Example
                 {
                     if (menuAction == MenuAction.Input && menuItem.Data is string input)
                     {
-                        player.PrintToChat($"Input - Data: {menuItem.Data}");
+                        player.PrintToChat($"Input - Data: {input}");
                     }
                 }
             )
