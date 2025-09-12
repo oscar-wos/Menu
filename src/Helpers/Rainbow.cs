@@ -24,7 +24,7 @@ internal static class Rainbow
 
     public static Color CurrentColor { get; private set; }
 
-    public static void UpdateHue()
+    public static void Update()
     {
         _currentHue = (_currentHue + HUE_INCREMENT + HUE_MAX) % HUE_MAX;
         CurrentColor = GetColorFromHue(_currentHue);

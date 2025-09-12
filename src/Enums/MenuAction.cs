@@ -8,4 +8,5 @@ public enum MenuAction
     Update,
     Exit,
     Assist,
+    Input,
 }

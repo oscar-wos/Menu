@@ -176,5 +176,5 @@ public static partial class Menu
     internal static MenuData? GetData(int playerSlot) => _menuData[playerSlot];
 
     internal static bool IsSelectable(MenuItem menuItem) =>
-        menuItem.Type is MenuItemType.Choice or MenuItemType.Button;
+        menuItem.Type is MenuItemType.Choice or MenuItemType.Button or MenuItemType.Input;
 }

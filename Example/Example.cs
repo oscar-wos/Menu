@@ -17,5 +17,6 @@ public partial class Example : BasePlugin
         AddCommand("css_example6", "", Example6Menu);
         AddCommand("css_example7", "", Example7Menu);
         AddCommand("css_example8", "", Example8Menu);
+        AddCommand("css_example9", "", Example9Menu);
     }
 }

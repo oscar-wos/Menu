@@ -1,4 +1,5 @@
 using System.Drawing;
+using Microsoft.Extensions.Options;
 using RMenu.Enums;
 using RMenu.Extensions;
 
@@ -33,6 +34,7 @@ public class MenuOptions
         new(" ]", new MenuFormat(new Color().Rainbow())),
     ];
 
+    private MenuValue _input = new("________");
     private MenuFormat? _highlight = null;
 
     public MenuOptions() => UpdateHtml();
@@ -91,6 +93,8 @@ public class MenuOptions
                 )
             );
         }
+
+        _input = source._input;
 
         if (source._highlight is not null)
         {
@@ -227,6 +231,16 @@ public class MenuOptions
         }
     }
 
+    public MenuValue Input
+    {
+        get => _input;
+        set
+        {
+            _input = value;
+            _ = _options.Add(nameof(Input));
+        }
+    }
+
     public MenuFormat? Highlight
     {
         get => _highlight;
@@ -245,6 +259,26 @@ public class MenuOptions
 
     internal void Merge(MenuOptions overrides)
     {
+        if (overrides.IsSet(nameof(HeaderFontSize)))
+        {
+            HeaderFontSize = overrides.HeaderFontSize;
+        }
+
+        if (overrides.IsSet(nameof(ItemFontSize)))
+        {
+            ItemFontSize = overrides.ItemFontSize;
+        }
+
+        if (overrides.IsSet(nameof(FooterFontSize)))
+        {
+            FooterFontSize = overrides.FooterFontSize;
+        }
+
+        if (overrides.IsSet(nameof(ProcessInput)))
+        {
+            ProcessInput = overrides.ProcessInput;
+        }
+
         if (overrides.IsSet(nameof(BlockMovement)))
         {
             BlockMovement = overrides.BlockMovement;
@@ -265,14 +299,14 @@ public class MenuOptions
             Priority = overrides.Priority;
         }
 
-        if (overrides.IsSet(nameof(ProcessInput)))
+        if (overrides.IsSet(nameof(Buttons)))
         {
-            ProcessInput = overrides.ProcessInput;
+            Buttons = overrides.Buttons;
         }
 
-        if (overrides.IsSet(nameof(Highlight)))
+        if (overrides.IsSet(nameof(Continuous)))
         {
-            Highlight = overrides.Highlight;
+            Continuous = overrides.Continuous;
         }
 
         if (overrides.IsSet(nameof(Cursor)))
@@ -285,29 +319,14 @@ public class MenuOptions
             Selector = overrides.Selector;
         }
 
-        if (overrides.IsSet(nameof(Buttons)))
+        if (overrides.IsSet(nameof(Input)))
         {
-            Buttons = overrides.Buttons;
+            Input = overrides.Input;
         }
 
-        if (overrides.IsSet(nameof(Continuous)))
+        if (overrides.IsSet(nameof(Highlight)))
         {
-            Continuous = overrides.Continuous;
-        }
-
-        if (overrides.IsSet(nameof(HeaderFontSize)))
-        {
-            HeaderFontSize = overrides.HeaderFontSize;
-        }
-
-        if (overrides.IsSet(nameof(ItemFontSize)))
-        {
-            ItemFontSize = overrides.ItemFontSize;
-        }
-
-        if (overrides.IsSet(nameof(FooterFontSize)))
-        {
-            FooterFontSize = overrides.FooterFontSize;
+            Highlight = overrides.Highlight;
         }
     }
 

@@ -18,6 +18,7 @@ public class MenuBase(
     public MenuOptions Options { get; set; } = options ?? new MenuOptions();
 
     internal Action<MenuBase, MenuAction>? Callback { get; set; }
+    internal bool Text { get; set; } = false;
 
     internal void Input(MenuButton button)
     {
@@ -37,9 +38,19 @@ public class MenuBase(
         action?.Invoke();
     }
 
+    internal void Invoke(MenuAction menuAction)
+    {
+        MenuItem? menuItem = SelectedItem?.Item;
+        MenuValue? menuValue = menuItem?.SelectedValue?.Value;
+
+        menuValue?.Callback?.Invoke(this, menuValue, menuAction);
+        menuItem?.Callback?.Invoke(this, menuItem, menuAction);
+        Callback?.Invoke(this, menuAction);
+    }
+
     private void HandleUp()
     {
-        if (SelectedItem?.Index is not { } index)
+        if (SelectedItem?.Index is not { } index || Text)
         {
             return;
         }
@@ -56,7 +67,7 @@ public class MenuBase(
 
     private void HandleDown()
     {
-        if (SelectedItem?.Index is not { } index)
+        if (SelectedItem?.Index is not { } index || Text)
         {
             return;
         }
@@ -73,7 +84,7 @@ public class MenuBase(
 
     private void HandleLeft()
     {
-        if (SelectedItem?.Item is not { } menuItem)
+        if (SelectedItem?.Item is not { } menuItem || Text)
         {
             return;
         }
@@ -86,7 +97,7 @@ public class MenuBase(
 
     private void HandleRight()
     {
-        if (SelectedItem?.Item is not { } menuItem)
+        if (SelectedItem?.Item is not { } menuItem || Text)
         {
             return;
         }
@@ -99,17 +110,28 @@ public class MenuBase(
 
     private void HandleSelect()
     {
-        if (SelectedItem?.Item is null)
+        if (SelectedItem?.Item is not { } menuItem)
         {
             return;
         }
 
-        Invoke(MenuAction.Select);
+        if (menuItem.Type == MenuItemType.Input)
+        {
+            Text = true;
+        }
+        else
+        {
+            Invoke(MenuAction.Select);
+        }
     }
 
     private void HandleBack()
     {
-        if (Menu.Close(Player))
+        if (SelectedItem?.Item is { Type: { } type } && type == MenuItemType.Input && Text)
+        {
+            Text = false;
+        }
+        else if (Menu.Close(Player))
         {
             Invoke(MenuAction.Exit);
         }
@@ -127,16 +149,6 @@ public class MenuBase(
     }
 
     private void HandleAssist() => Invoke(MenuAction.Assist);
-
-    private void Invoke(MenuAction menuAction)
-    {
-        MenuItem? menuItem = SelectedItem?.Item;
-        MenuValue? menuValue = menuItem?.SelectedValue?.Value;
-
-        menuValue?.Callback?.Invoke(this, menuValue, menuAction);
-        menuItem?.Callback?.Invoke(this, menuItem, menuAction);
-        Callback?.Invoke(this, menuAction);
-    }
 
     private bool IsSelected(int index) =>
         Menu.IsSelectable(Items[index])

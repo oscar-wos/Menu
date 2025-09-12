@@ -17,7 +17,7 @@ public class MenuObject(string text, MenuFormat? format = null)
     {
         MenuFormat format = Format;
 
-        if (highlight is not null && format.CanHighlight)
+        if (format.CanHighlight && highlight is not null)
         {
             format = highlight;
         }
