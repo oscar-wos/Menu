@@ -7,7 +7,8 @@ namespace RMenu;
 public class MenuBase(
     MenuValue? header = null,
     MenuValue? footer = null,
-    MenuOptions? options = null
+    MenuOptions? options = null,
+    object? data = null
 )
 {
     public CCSPlayerController Player { get; set; } = null!;
@@ -16,6 +17,7 @@ public class MenuBase(
     public MenuValue? Header { get; set; } = header;
     public MenuValue? Footer { get; set; } = footer;
     public MenuOptions Options { get; set; } = options ?? new MenuOptions();
+    public object? Data { get; set; } = data;
 
     internal Action<MenuBase, MenuAction>? Callback { get; set; }
     internal bool Text { get; set; } = false;

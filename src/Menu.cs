@@ -244,6 +244,7 @@ public static partial class Menu
     private static void FormatInput(StringBuilder stringBuilder, MenuBase menu, MenuItem menuItem)
     {
         int remainingChars = menu.Options.AvailableChars;
+        bool isSelected = menuItem == menu.SelectedItem?.Item;
 
         if (menuItem.Head is { } head)
         {
@@ -255,7 +256,7 @@ public static partial class Menu
             remainingChars -= tail.Length(menu.Options.Highlight);
         }
 
-        if (menu.Text)
+        if (menu.Text && isSelected)
         {
             RenderSelector(stringBuilder, menu, menuItem, 0);
         }
@@ -270,7 +271,7 @@ public static partial class Menu
             menu.Options.Input.Render(stringBuilder);
         }
 
-        if (menu.Text)
+        if (menu.Text && isSelected)
         {
             RenderSelector(stringBuilder, menu, menuItem, 1);
         }
